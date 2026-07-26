@@ -1,4 +1,5 @@
 export type HouseholdMember = {
+  id: string;
   userId: string;
   displayName: string;
 };

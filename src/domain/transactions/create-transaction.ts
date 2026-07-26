@@ -1,0 +1,43 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { TRANSACTION_COLUMNS, toTransaction, type Transaction, type TransactionType } from "./types";
+
+export async function createTransaction(
+  supabase: SupabaseClient,
+  {
+    householdId,
+    type,
+    amount,
+    date,
+    accountId,
+    categoryId,
+    ownerHouseholdMemberId,
+    note,
+  }: {
+    householdId: string;
+    type: TransactionType;
+    amount: number;
+    date: string;
+    accountId: string;
+    categoryId?: string | null;
+    ownerHouseholdMemberId?: string | null;
+    note?: string | null;
+  },
+): Promise<Transaction> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .insert({
+      household_id: householdId,
+      type,
+      amount,
+      date,
+      account_id: accountId,
+      category_id: categoryId ?? null,
+      owner_household_member_id: ownerHouseholdMemberId ?? null,
+      note: note ?? null,
+    })
+    .select(TRANSACTION_COLUMNS)
+    .single();
+  if (error) throw error;
+
+  return toTransaction(data);
+}

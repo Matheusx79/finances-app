@@ -15,7 +15,7 @@ export async function getHouseholdForUser(
 
   const { data: household, error: householdError } = await supabase
     .from("households")
-    .select("id, name, household_members(user_id, display_name)")
+    .select("id, name, household_members(id, user_id, display_name)")
     .eq("id", membership.household_id)
     .single();
   if (householdError) throw householdError;
@@ -24,7 +24,8 @@ export async function getHouseholdForUser(
     id: household.id,
     name: household.name,
     members: household.household_members.map(
-      (member: { user_id: string; display_name: string }) => ({
+      (member: { id: string; user_id: string; display_name: string }) => ({
+        id: member.id,
         userId: member.user_id,
         displayName: member.display_name,
       }),

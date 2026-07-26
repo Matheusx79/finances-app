@@ -28,8 +28,8 @@ describe("getHouseholdForUser", () => {
       expect(result?.name).toBe("Test Household");
       expect(result?.members).toEqual(
         expect.arrayContaining([
-          { userId: userA.id, displayName: "Alice" },
-          { userId: userB.id, displayName: "Bob" },
+          { id: expect.any(String), userId: userA.id, displayName: "Alice" },
+          { id: expect.any(String), userId: userB.id, displayName: "Bob" },
         ]),
       );
     } finally {
