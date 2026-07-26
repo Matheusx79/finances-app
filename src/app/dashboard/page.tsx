@@ -29,6 +29,7 @@ export default async function DashboardPage() {
       </div>
       <div className="flex gap-2">
         <Button render={<Link href="/dashboard/accounts">Contas</Link>} variant="outline" />
+        <Button render={<Link href="/dashboard/categories">Categorias</Link>} variant="outline" />
         <form action={logout}>
           <Button type="submit" variant="outline">
             Sair
