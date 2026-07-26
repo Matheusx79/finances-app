@@ -15,7 +15,7 @@
 
 ## Comments
 
-Implemented in commit `<pending>`.
+Implemented in commit `240e4c2`.
 
 - New migration `supabase/migrations/20260726170000_categories.sql` adds a `categories` table (`household_id`, `name`, `created_at`), scoped by RLS to `internal.household_id_for_user((select auth.uid()))` with explicit select/insert/update/delete policies and explicit grants to `authenticated`/`service_role` — structurally identical to the `accounts` migration from ticket 02.
 - **Default category seeding:** implemented at the DB level via a new `internal.seed_default_categories()` trigger function, fired `after insert on households` (mirroring the `household_member_cap` trigger style from `20260726150000_cap_household_members.sql`), which inserts a fixed set of default category rows for the new household. This means every household-creation path (seed script, future admin UI, tests) gets defaults for free with no app-code coupling. Default list chosen: **Mercado, Transporte, Moradia, Lazer, Saúde, Contas** (the first five straight from the spec's example list, plus Contas — bills/utilities — as a sensible sixth default).
