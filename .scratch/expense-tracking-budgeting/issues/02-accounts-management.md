@@ -14,7 +14,7 @@
 
 ## Comments
 
-Implemented in commit `<pending>`.
+Implemented in commit `6843b19`.
 
 - New migration `supabase/migrations/20260726160000_accounts.sql` adds an `accounts` table (`household_id`, `name`, `created_at`), scoped by RLS to `internal.household_id_for_user((select auth.uid()))` with explicit select/insert/update/delete policies (accounts, unlike households, are managed directly by members rather than via service role) and explicit grants to `authenticated`/`service_role`.
 - Domain layer: `src/domain/accounts/{create-account,list-accounts,rename-account,delete-account}.ts`, each with a colocated `*.test.ts` run against the real local Supabase stack, following the `get-household-for-user` plain-function convention. Every function has a household-scoped-isolation test (an outsider household can never read/rename/delete another household's account), plus tests confirming rename/delete performed by one member are visible to the other (shared household data, not per-user).
