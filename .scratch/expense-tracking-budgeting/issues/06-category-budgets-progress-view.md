@@ -4,11 +4,23 @@
 
 **Blocked by:** 04.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Domain-layer functions: `setCategoryBudget`, `getBudgetProgressForMonth`, tested against the local Supabase stack
-- [ ] A budget is one amount per category per calendar month, scoped to the household — no per-person budgets, no rollover between months
-- [ ] Budget progress is computed as sum of expense transactions in that category, household-wide (respecting the calendar month boundary: 1st to end of month), against the category's budget for that month
-- [ ] UI (in pt-BR) to set/edit each category's budget for the current month
-- [ ] Dashboard shows spent/budget per category for the current month, with categories over budget visually flagged (e.g. color/styling distinct from on-track categories)
-- [ ] Dashboard shows a total income figure for the current month, separate from the budget-progress display, with no budget or target applied to it
+- [x] Domain-layer functions: `setCategoryBudget`, `getBudgetProgressForMonth`, tested against the local Supabase stack
+- [x] A budget is one amount per category per calendar month, scoped to the household — no per-person budgets, no rollover between months
+- [x] Budget progress is computed as sum of expense transactions in that category, household-wide (respecting the calendar month boundary: 1st to end of month), against the category's budget for that month
+- [x] UI (in pt-BR) to set/edit each category's budget for the current month
+- [x] Dashboard shows spent/budget per category for the current month, with categories over budget visually flagged (e.g. color/styling distinct from on-track categories)
+- [x] Dashboard shows a total income figure for the current month, separate from the budget-progress display, with no budget or target applied to it
+
+## Comments
+
+Implemented in commit `3043356`.
+
+- New migration `supabase/migrations/20260726190000_category_budgets.sql` adds `category_budgets` (`household_id`, `category_id`, `year`, `month`, `amount`, `created_at`), unique on `(household_id, category_id, year, month)` — no owner/person column at all, so per-person budgets aren't just unused but structurally impossible. `year`/`month` as plain integers rather than a date column (a budget has no day-of-month meaning). `category_id` is `on delete restrict`, matching the transactions migration's precedent. Same RLS shape as accounts/categories/transactions, plus a `check_category_budget_household_consistency` trigger mirroring `check_transaction_household_consistency` (a budget's `category_id` must belong to the same household — a plain FK alone doesn't guarantee that).
+- Domain layer: `src/domain/budgets/{types,set-category-budget,get-budget-progress-for-month}.ts`, following the accounts/categories plain-function convention. `setCategoryBudget` upserts on the `(household_id, category_id, year, month)` unique constraint, so calling it twice for the same month updates rather than duplicates. `getBudgetProgressForMonth` reuses `listTransactionsForMonth` (not re-derived) for the month-boundary fetch, summing expense amounts per category in JS and income separately; categories with no budget set still appear (`budgetAmount: null`) so spending is visible before a target is configured. 10 tests across both files (upsert-not-duplicate, no-rollover across months, cross-household rejection, expense-only summing, income excluded from spend but counted in `totalIncome`, month-boundary correctness, household isolation, over/under-budget, unset-budget categories).
+- UI: a standalone `src/app/dashboard/budgets/` route (`page.tsx` + `actions.ts`) for setting/editing each category's current-month budget — kept separate from the dashboard so the dashboard itself stays read-only per the acceptance criteria. Dashboard (`src/app/dashboard/page.tsx`) gained a "Receita do mês" card (plain total, no target) and an "Orçamento por categoria" card with over-budget rows flagged via red border/background/text + an "Acima do orçamento" label.
+- Code-reviewed (Standards + Spec axes, parallel sub-agents) before commit, alongside ticket 05. Spec axis: no missing/wrong requirements, no scope creep. Standards axis: no hard violations; flagged two judgement-call smells at Rule-of-Three scale — `getBudgetProgressForMonth` bundling unrelated `totalIncome` summation into the same function as category progress (Divergent Change), and ~30 lines of similar category/spent/budget list-rendering JSX between the dashboard and budgets pages (Duplicated Code). Left as-is, matching the precedent ticket 04 already set for similar-scale duplication.
+- Live-browser-verified end to end against a throwaway household seeded on the local Supabase stack (not production — the two real household members' passwords are generated once and never stored, so production login isn't available to the agent; local stack + a disposable test household was used instead, cleaned up afterward): logged in, set a R$50 budget on Mercado, added an R$80 expense in that category, confirmed the dashboard flags it red with "Acima do orçamento" and shows "R$ 80,00 / R$ 50,00", added a R$3.000 income transaction and confirmed "Receita do mês" updates to R$ 3.000,00 with no budget applied to it. No console errors during the session.
+- The new migration was pushed to the hosted Supabase project (`xzmmsjpqalrwonqbuzul`) via `apply_migration` before commit — remote migration history doesn't match local filenames (established in ticket 01/04's history), so this was applied directly rather than via `supabase db push`, matching the existing remote migrations' naming convention. `get_advisors` (security) showed no new findings beyond a pre-existing, unrelated leaked-password-protection warning.
+- Verified: `npx tsc --noEmit`, `npx eslint`, full `npm test` (57/57 passing), `npm run build` all clean.
