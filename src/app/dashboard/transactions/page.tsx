@@ -95,6 +95,16 @@ export default async function TransactionsPage({
                       </summary>
                       <div className="mt-2">
                         <TransactionForm
+                          key={[
+                            transaction.id,
+                            transaction.amount,
+                            transaction.date,
+                            transaction.type,
+                            transaction.accountId,
+                            transaction.categoryId,
+                            transaction.ownerHouseholdMemberId,
+                            transaction.note,
+                          ].join(":")}
                           action={updateTransactionAction}
                           accounts={accounts}
                           categories={categories}
