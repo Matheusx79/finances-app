@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getHouseholdForUser } from "@/domain/household/get-household-for-user";
@@ -26,11 +27,14 @@ export default async function DashboardPage() {
           <p className="text-zinc-600 dark:text-zinc-400">{household.name}</p>
         )}
       </div>
-      <form action={logout}>
-        <Button type="submit" variant="outline">
-          Sair
-        </Button>
-      </form>
+      <div className="flex gap-2">
+        <Button render={<Link href="/dashboard/accounts">Contas</Link>} variant="outline" />
+        <form action={logout}>
+          <Button type="submit" variant="outline">
+            Sair
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
