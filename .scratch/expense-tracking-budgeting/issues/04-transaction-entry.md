@@ -15,7 +15,7 @@
 
 ## Comments
 
-Implemented in commit `<pending>`.
+Implemented in commit `35039b2`.
 
 - New migration `supabase/migrations/20260726180000_transactions.sql` adds a `transactions` table (`household_id`, `type`, `amount`, `date`, `category_id`, `account_id`, `owner_household_member_id`, `note`, `created_at`), scoped by RLS to `internal.household_id_for_user((select auth.uid()))` with explicit select/insert/update/delete policies and explicit grants to `authenticated`/`service_role` — same shape as the accounts/categories migrations. Per tickets 02/03's pre-documented decision, `account_id`/`category_id` FKs use `on delete restrict` (deleting a referenced account/category is blocked, not cascaded/nulled).
 - **Amount storage decision:** `numeric(12, 2)` reais (e.g. `12.50`), not integer cents. The UI collects/displays a decimal BRL amount directly, so this avoids a cents↔reais conversion layer while still avoiding the float-rounding issues a `real`/`double precision` column would introduce.
