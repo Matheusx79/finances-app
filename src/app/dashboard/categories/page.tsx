@@ -16,7 +16,12 @@ export default async function CategoriesPage() {
       <div className="flex w-full max-w-sm flex-col gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">Categorias</h1>
-          <Button render={<Link href="/dashboard">Voltar</Link>} variant="outline" size="sm" />
+          <Button
+            render={<Link href="/dashboard">Voltar</Link>}
+            nativeButton={false}
+            variant="outline"
+            size="sm"
+          />
         </div>
 
         <Card>
