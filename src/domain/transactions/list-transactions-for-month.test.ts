@@ -207,6 +207,169 @@ describe("listTransactionsForMonth", () => {
     }
   });
 
+  it("filters to a specific member's transactions plus shared ones, excluding the other member's", async () => {
+    const admin = createAdminClient();
+    const userA = await createTestUser(admin, "member-a");
+    const userB = await createTestUser(admin, "member-b");
+    const householdId = await createTestHousehold(admin, "Test Household", [
+      { user: userA, displayName: "Alice" },
+      { user: userB, displayName: "Bob" },
+    ]);
+
+    try {
+      const anon = createAnonClient();
+      await signInAs(anon, userA);
+      const account = await createAccount(anon, { householdId, name: "Carteira" });
+
+      const { data: memberA } = await admin
+        .from("household_members")
+        .select("id")
+        .eq("household_id", householdId)
+        .eq("user_id", userA.id)
+        .single();
+      const { data: memberB } = await admin
+        .from("household_members")
+        .select("id")
+        .eq("household_id", householdId)
+        .eq("user_id", userB.id)
+        .single();
+
+      const aliceExpense = await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 10,
+        date: "2026-07-05",
+        accountId: account.id,
+        ownerHouseholdMemberId: memberA!.id,
+      });
+      const bobExpense = await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 20,
+        date: "2026-07-06",
+        accountId: account.id,
+        ownerHouseholdMemberId: memberB!.id,
+      });
+      const sharedIncome = await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 30,
+        date: "2026-07-07",
+        accountId: account.id,
+      });
+
+      const aliceView = await listTransactionsForMonth(anon, {
+        householdId,
+        year: 2026,
+        month: 7,
+        ownerHouseholdMemberId: memberA!.id,
+      });
+      const aliceIds = aliceView.map((t) => t.id);
+      expect(aliceIds).toContain(aliceExpense.id);
+      expect(aliceIds).toContain(sharedIncome.id);
+      expect(aliceIds).not.toContain(bobExpense.id);
+
+      const bobView = await listTransactionsForMonth(anon, {
+        householdId,
+        year: 2026,
+        month: 7,
+        ownerHouseholdMemberId: memberB!.id,
+      });
+      const bobIds = bobView.map((t) => t.id);
+      expect(bobIds).toContain(bobExpense.id);
+      expect(bobIds).toContain(sharedIncome.id);
+      expect(bobIds).not.toContain(aliceExpense.id);
+
+      const combinedView = await listTransactionsForMonth(anon, {
+        householdId,
+        year: 2026,
+        month: 7,
+      });
+      const combinedIds = combinedView.map((t) => t.id);
+      expect(combinedIds).toContain(aliceExpense.id);
+      expect(combinedIds).toContain(bobExpense.id);
+      expect(combinedIds).toContain(sharedIncome.id);
+    } finally {
+      await cleanupTestData(admin, {
+        householdIds: [householdId],
+        userIds: [userA.id, userB.id],
+      });
+    }
+  });
+
+  it("never returns another household's transactions when filtering by owner (household-scoped isolation)", async () => {
+    const admin = createAdminClient();
+    const userA = await createTestUser(admin, "member-a");
+    const userB = await createTestUser(admin, "member-b");
+    const outsider = await createTestUser(admin, "outsider");
+    const outsiderPartner = await createTestUser(admin, "outsider-partner");
+    const householdId = await createTestHousehold(admin, "Test Household", [
+      { user: userA, displayName: "Alice" },
+      { user: userB, displayName: "Bob" },
+    ]);
+    const otherHouseholdId = await createTestHousehold(admin, "Other Household", [
+      { user: outsider, displayName: "Out" },
+      { user: outsiderPartner, displayName: "Out2" },
+    ]);
+
+    try {
+      const anon = createAnonClient();
+      await signInAs(anon, userA);
+      const account = await createAccount(anon, { householdId, name: "Carteira" });
+
+      const { data: memberA } = await admin
+        .from("household_members")
+        .select("id")
+        .eq("household_id", householdId)
+        .eq("user_id", userA.id)
+        .single();
+
+      await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 1,
+        date: "2026-07-05",
+        accountId: account.id,
+        ownerHouseholdMemberId: memberA!.id,
+      });
+
+      const outsiderAnon = createAnonClient();
+      await signInAs(outsiderAnon, outsider);
+      const outsiderAccount = await createAccount(outsiderAnon, {
+        householdId: otherHouseholdId,
+        name: "Carteira",
+      });
+      const { data: outsiderMember } = await admin
+        .from("household_members")
+        .select("id")
+        .eq("household_id", otherHouseholdId)
+        .eq("user_id", outsider.id)
+        .single();
+      await createTransaction(outsiderAnon, {
+        householdId: otherHouseholdId,
+        type: "income",
+        amount: 2,
+        date: "2026-07-05",
+        accountId: outsiderAccount.id,
+        ownerHouseholdMemberId: outsiderMember!.id,
+      });
+
+      const transactions = await listTransactionsForMonth(anon, {
+        householdId,
+        year: 2026,
+        month: 7,
+        ownerHouseholdMemberId: memberA!.id,
+      });
+
+      expect(transactions.every((t) => t.householdId === householdId)).toBe(true);
+    } finally {
+      await cleanupTestData(admin, {
+        householdIds: [householdId, otherHouseholdId],
+        userIds: [userA.id, userB.id, outsider.id, outsiderPartner.id],
+      });
+    }
+  });
+
   it("never returns another household's transactions (household-scoped isolation)", async () => {
     const admin = createAdminClient();
     const userA = await createTestUser(admin, "member-a");

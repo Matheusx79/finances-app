@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionSummary } from "@/components/transaction-summary";
 import { TransactionForm } from "./transaction-form";
 import { createTransactionAction, deleteTransactionAction, updateTransactionAction } from "./actions";
+import { PersonFilter, type PersonFilterValue } from "./person-filter";
 
 const ERROR_MESSAGES: Record<string, string> = {
   "categoria-obrigatoria": "Categoria é obrigatória para despesas.",
@@ -16,10 +17,22 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; responsavel?: string }>;
 }) {
-  const { erro } = await searchParams;
-  const { supabase, householdId, household } = await requireHousehold();
+  const { erro, responsavel } = await searchParams;
+  const { supabase, userId, householdId, household } = await requireHousehold();
+
+  const me = household.members.find((member) => member.userId === userId);
+  const partner = household.members.find((member) => member.userId !== userId);
+
+  const activeFilter: PersonFilterValue =
+    responsavel === "eu" && me
+      ? "eu"
+      : responsavel === "parceiro" && partner
+        ? "parceiro"
+        : "casal";
+  const ownerHouseholdMemberId =
+    activeFilter === "eu" ? me?.id : activeFilter === "parceiro" ? partner?.id : undefined;
 
   const now = new Date();
   const [accounts, categories, transactions] = await Promise.all([
@@ -29,6 +42,7 @@ export default async function TransactionsPage({
       householdId,
       year: now.getFullYear(),
       month: now.getMonth() + 1,
+      ownerHouseholdMemberId,
     }),
   ]);
 
@@ -67,8 +81,13 @@ export default async function TransactionsPage({
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-col items-start gap-3">
             <CardTitle>Transações do mês</CardTitle>
+            <PersonFilter
+              active={activeFilter}
+              partnerName={partner?.displayName ?? "Parceiro(a)"}
+              basePath="/dashboard/transactions"
+            />
           </CardHeader>
           <CardContent>
             {transactions.length === 0 ? (
