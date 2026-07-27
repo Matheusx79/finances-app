@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { requireHousehold } from "@/lib/current-household";
 import { listAccounts } from "@/domain/accounts/list-accounts";
 import { listCategories } from "@/domain/categories/list-categories";
@@ -48,114 +47,104 @@ export default async function TransactionsPage({
   ]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-4 bg-zinc-50 p-4 dark:bg-black">
-      <div className="flex w-full max-w-lg flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Transações</h1>
-          <Button
-            render={<Link href="/dashboard">Voltar</Link>}
-            nativeButton={false}
-            variant="outline"
-            size="sm"
+    <div className="flex w-full max-w-lg flex-col gap-4">
+      <h1 className="text-xl font-semibold">Transações</h1>
+
+      {erro && (
+        <p className="text-sm text-red-600" role="alert">
+          {ERROR_MESSAGES[erro] ?? "Não foi possível salvar a transação."}
+        </p>
+      )}
+
+      <MonthNav
+        year={year}
+        month={month}
+        basePath="/dashboard/transactions"
+        extraParams={{ responsavel }}
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Nova transação</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TransactionForm
+            action={createTransactionAction}
+            accounts={accounts}
+            categories={categories}
+            members={household.members}
+            submitLabel="Adicionar"
           />
-        </div>
+        </CardContent>
+      </Card>
 
-        {erro && (
-          <p className="text-sm text-red-600" role="alert">
-            {ERROR_MESSAGES[erro] ?? "Não foi possível salvar a transação."}
-          </p>
-        )}
+      <Card>
+        <CardHeader className="flex flex-col items-start gap-3">
+          <CardTitle>Transações de {formatMonthYearBR(year, month)}</CardTitle>
+          <PersonFilter
+            active={activeFilter}
+            partnerName={partner?.displayName ?? "Parceiro(a)"}
+            basePath="/dashboard/transactions"
+            extraParams={{ ano: String(year), mes: String(month) }}
+          />
+        </CardHeader>
+        <CardContent>
+          {transactions.length === 0 ? (
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Nenhuma transação registrada neste mês ainda.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {transactions.map((transaction) => (
+                <li
+                  key={transaction.id}
+                  className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
+                >
+                  <TransactionSummary
+                    transaction={transaction}
+                    accounts={accounts}
+                    categories={categories}
+                    members={household.members}
+                  />
 
-        <MonthNav
-          year={year}
-          month={month}
-          basePath="/dashboard/transactions"
-          extraParams={{ responsavel }}
-        />
+                  <details>
+                    <summary className="cursor-pointer text-sm text-zinc-600 underline dark:text-zinc-400">
+                      Editar
+                    </summary>
+                    <div className="mt-2">
+                      <TransactionForm
+                        key={[
+                          transaction.id,
+                          transaction.amount,
+                          transaction.date,
+                          transaction.type,
+                          transaction.accountId,
+                          transaction.categoryId,
+                          transaction.ownerHouseholdMemberId,
+                          transaction.note,
+                        ].join(":")}
+                        action={updateTransactionAction}
+                        accounts={accounts}
+                        categories={categories}
+                        members={household.members}
+                        submitLabel="Salvar"
+                        transaction={transaction}
+                      />
+                    </div>
+                  </details>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Nova transação</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TransactionForm
-              action={createTransactionAction}
-              accounts={accounts}
-              categories={categories}
-              members={household.members}
-              submitLabel="Adicionar"
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-col items-start gap-3">
-            <CardTitle>Transações de {formatMonthYearBR(year, month)}</CardTitle>
-            <PersonFilter
-              active={activeFilter}
-              partnerName={partner?.displayName ?? "Parceiro(a)"}
-              basePath="/dashboard/transactions"
-              extraParams={{ ano: String(year), mes: String(month) }}
-            />
-          </CardHeader>
-          <CardContent>
-            {transactions.length === 0 ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Nenhuma transação registrada neste mês ainda.
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {transactions.map((transaction) => (
-                  <li
-                    key={transaction.id}
-                    className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
-                  >
-                    <TransactionSummary
-                      transaction={transaction}
-                      accounts={accounts}
-                      categories={categories}
-                      members={household.members}
-                    />
-
-                    <details>
-                      <summary className="cursor-pointer text-sm text-zinc-600 underline dark:text-zinc-400">
-                        Editar
-                      </summary>
-                      <div className="mt-2">
-                        <TransactionForm
-                          key={[
-                            transaction.id,
-                            transaction.amount,
-                            transaction.date,
-                            transaction.type,
-                            transaction.accountId,
-                            transaction.categoryId,
-                            transaction.ownerHouseholdMemberId,
-                            transaction.note,
-                          ].join(":")}
-                          action={updateTransactionAction}
-                          accounts={accounts}
-                          categories={categories}
-                          members={household.members}
-                          submitLabel="Salvar"
-                          transaction={transaction}
-                        />
-                      </div>
-                    </details>
-
-                    <form action={deleteTransactionAction}>
-                      <input type="hidden" name="transactionId" value={transaction.id} />
-                      <Button type="submit" variant="destructive" size="sm">
-                        Excluir
-                      </Button>
-                    </form>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  <form action={deleteTransactionAction}>
+                    <input type="hidden" name="transactionId" value={transaction.id} />
+                    <Button type="submit" variant="destructive" size="sm">
+                      Excluir
+                    </Button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

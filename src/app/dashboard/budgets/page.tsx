@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { requireHousehold } from "@/lib/current-household";
 import { getBudgetProgressForMonth } from "@/domain/budgets/get-budget-progress-for-month";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatBRL } from "@/lib/currency";
+import { CategoryBudgetCard } from "@/components/category-budget-progress";
 import { setCategoryBudgetAction } from "./actions";
 import { formatMonthYearBR } from "../month-nav";
 
@@ -17,40 +16,27 @@ export default async function BudgetsPage() {
   const progress = await getBudgetProgressForMonth(supabase, { householdId, year, month });
 
   return (
-    <div className="flex min-h-screen flex-col items-center gap-4 bg-zinc-50 p-4 dark:bg-black">
-      <div className="flex w-full max-w-sm flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Orçamentos</h1>
-          <Button
-            render={<Link href="/dashboard">Voltar</Link>}
-            nativeButton={false}
-            variant="outline"
-            size="sm"
-          />
-        </div>
+    <div className="flex w-full max-w-sm flex-col gap-4">
+      <h1 className="text-xl font-semibold">Orçamentos</h1>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Orçamento por categoria — {formatMonthYearBR(year, month)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {progress.categories.length === 0 ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Nenhuma categoria cadastrada ainda.
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {progress.categories.map((category) => (
-                  <li
-                    key={category.categoryId}
-                    className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
+      <Card>
+        <CardHeader>
+          <CardTitle>Orçamento por categoria — {formatMonthYearBR(year, month)}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {progress.categories.length === 0 ? (
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Nenhuma categoria cadastrada ainda.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {progress.categories.map((category) => (
+                <li key={category.categoryId}>
+                  <CategoryBudgetCard
+                    categoryName={category.categoryName}
+                    spentAmount={category.spentAmount}
+                    budgetAmount={category.budgetAmount}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium">{category.categoryName}</span>
-                      <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                        Gasto até agora: {formatBRL(category.spentAmount)}
-                      </span>
-                    </div>
                     <form
                       // Keyed on the current budget amount so a save doesn't leave the
                       // uncontrolled Input holding a stale defaultValue after revalidation
@@ -81,13 +67,13 @@ export default async function BudgetsPage() {
                         Salvar
                       </Button>
                     </form>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  </CategoryBudgetCard>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
