@@ -7,13 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/currency";
 import { setCategoryBudgetAction } from "./actions";
-
-/** e.g. "julho de 2026" — display-only, not used for date storage/comparison. */
-function formatMonthYearBR(year: number, month: number): string {
-  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(
-    new Date(year, month - 1, 1),
-  );
-}
+import { formatMonthYearBR } from "../month-nav";
 
 export default async function BudgetsPage() {
   const { supabase, householdId } = await requireHousehold();

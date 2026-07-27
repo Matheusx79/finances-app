@@ -16,8 +16,15 @@ import { TransactionSummary } from "@/components/transaction-summary";
 import { cn } from "@/lib/utils";
 import { formatBRL } from "@/lib/currency";
 import { logout } from "./actions";
+import { MonthNav, formatMonthYearBR, resolveMonthParams } from "./month-nav";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ano?: string; mes?: string }>;
+}) {
+  const { ano, mes } = await searchParams;
+  const { year, month } = resolveMonthParams(ano, mes);
   const supabase = await createClient();
   const {
     data: { user },
@@ -37,9 +44,6 @@ export default async function DashboardPage() {
   let budgetProgress: BudgetProgressForMonth | null = null;
 
   if (household) {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
     [accounts, categories, transactions, budgetProgress] = await Promise.all([
       listAccounts(supabase, { householdId: household.id }),
       listCategories(supabase, { householdId: household.id }),
@@ -77,6 +81,11 @@ export default async function DashboardPage() {
           nativeButton={false}
           variant="outline"
         />
+        <Button
+          render={<Link href="/dashboard/recurring">Recorrentes</Link>}
+          nativeButton={false}
+          variant="outline"
+        />
         <form action={logout}>
           <Button type="submit" variant="outline">
             Sair
@@ -84,10 +93,12 @@ export default async function DashboardPage() {
         </form>
       </div>
 
+      {household && <MonthNav year={year} month={month} basePath="/dashboard" />}
+
       {household && budgetProgress && (
         <Card className="w-full max-w-lg">
           <CardHeader>
-            <CardTitle>Receita do mês</CardTitle>
+            <CardTitle>Receita de {formatMonthYearBR(year, month)}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
@@ -100,7 +111,7 @@ export default async function DashboardPage() {
       {household && budgetProgress && (
         <Card className="w-full max-w-lg">
           <CardHeader>
-            <CardTitle>Orçamento por categoria (mês atual)</CardTitle>
+            <CardTitle>Orçamento por categoria — {formatMonthYearBR(year, month)}</CardTitle>
           </CardHeader>
           <CardContent>
             {budgetProgress.categories.length === 0 ? (
@@ -156,7 +167,7 @@ export default async function DashboardPage() {
       {household && (
         <Card className="w-full max-w-lg">
           <CardHeader>
-            <CardTitle>Transações recentes deste mês</CardTitle>
+            <CardTitle>Transações recentes de {formatMonthYearBR(year, month)}</CardTitle>
           </CardHeader>
           <CardContent>
             {transactions.length === 0 ? (

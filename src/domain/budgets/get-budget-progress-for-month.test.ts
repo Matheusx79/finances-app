@@ -344,6 +344,71 @@ describe("getBudgetProgressForMonth", () => {
     }
   });
 
+  it("returns independent progress per month — spend and budget from one month never leak into another", async () => {
+    const admin = createAdminClient();
+    const userA = await createTestUser(admin, "member-a");
+    const userB = await createTestUser(admin, "member-b");
+    const householdId = await createTestHousehold(admin, "Test Household", [
+      { user: userA, displayName: "Alice" },
+      { user: userB, displayName: "Bob" },
+    ]);
+
+    try {
+      const anon = createAnonClient();
+      await signInAs(anon, userA);
+      const account = await createAccount(anon, { householdId, name: "Carteira" });
+      const groceries = await createCategory(anon, { householdId, name: "Mercado" });
+
+      await setCategoryBudget(anon, {
+        householdId,
+        categoryId: groceries.id,
+        year: 2026,
+        month: 7,
+        amount: 500,
+      });
+      await setCategoryBudget(anon, {
+        householdId,
+        categoryId: groceries.id,
+        year: 2026,
+        month: 8,
+        amount: 600,
+      });
+
+      await createTransaction(anon, {
+        householdId,
+        type: "expense",
+        amount: 120,
+        date: "2026-07-10",
+        accountId: account.id,
+        categoryId: groceries.id,
+      });
+      await createTransaction(anon, {
+        householdId,
+        type: "expense",
+        amount: 300,
+        date: "2026-08-10",
+        accountId: account.id,
+        categoryId: groceries.id,
+      });
+
+      const july = await getBudgetProgressForMonth(anon, { householdId, year: 2026, month: 7 });
+      const august = await getBudgetProgressForMonth(anon, { householdId, year: 2026, month: 8 });
+
+      const julyProgress = july.categories.find((c) => c.categoryId === groceries.id);
+      const augustProgress = august.categories.find((c) => c.categoryId === groceries.id);
+
+      expect(julyProgress?.budgetAmount).toBe(500);
+      expect(julyProgress?.spentAmount).toBe(120);
+      expect(augustProgress?.budgetAmount).toBe(600);
+      expect(augustProgress?.spentAmount).toBe(300);
+    } finally {
+      await cleanupTestData(admin, {
+        householdIds: [householdId],
+        userIds: [userA.id, userB.id],
+      });
+    }
+  });
+
   it("includes categories with no budget set (budgetAmount null) alongside their spend", async () => {
     const admin = createAdminClient();
     const userA = await createTestUser(admin, "member-a");

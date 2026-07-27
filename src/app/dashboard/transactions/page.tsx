@@ -9,6 +9,7 @@ import { TransactionSummary } from "@/components/transaction-summary";
 import { TransactionForm } from "./transaction-form";
 import { createTransactionAction, deleteTransactionAction, updateTransactionAction } from "./actions";
 import { PersonFilter, type PersonFilterValue } from "./person-filter";
+import { MonthNav, formatMonthYearBR, resolveMonthParams } from "../month-nav";
 
 const ERROR_MESSAGES: Record<string, string> = {
   "categoria-obrigatoria": "Categoria é obrigatória para despesas.",
@@ -17,9 +18,10 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string; responsavel?: string }>;
+  searchParams: Promise<{ erro?: string; responsavel?: string; ano?: string; mes?: string }>;
 }) {
-  const { erro, responsavel } = await searchParams;
+  const { erro, responsavel, ano, mes } = await searchParams;
+  const { year, month } = resolveMonthParams(ano, mes);
   const { supabase, userId, householdId, household } = await requireHousehold();
 
   const me = household.members.find((member) => member.userId === userId);
@@ -34,14 +36,13 @@ export default async function TransactionsPage({
   const ownerHouseholdMemberId =
     activeFilter === "eu" ? me?.id : activeFilter === "parceiro" ? partner?.id : undefined;
 
-  const now = new Date();
   const [accounts, categories, transactions] = await Promise.all([
     listAccounts(supabase, { householdId }),
     listCategories(supabase, { householdId }),
     listTransactionsForMonth(supabase, {
       householdId,
-      year: now.getFullYear(),
-      month: now.getMonth() + 1,
+      year,
+      month,
       ownerHouseholdMemberId,
     }),
   ]);
@@ -65,6 +66,13 @@ export default async function TransactionsPage({
           </p>
         )}
 
+        <MonthNav
+          year={year}
+          month={month}
+          basePath="/dashboard/transactions"
+          extraParams={{ responsavel }}
+        />
+
         <Card>
           <CardHeader>
             <CardTitle>Nova transação</CardTitle>
@@ -82,11 +90,12 @@ export default async function TransactionsPage({
 
         <Card>
           <CardHeader className="flex flex-col items-start gap-3">
-            <CardTitle>Transações do mês</CardTitle>
+            <CardTitle>Transações de {formatMonthYearBR(year, month)}</CardTitle>
             <PersonFilter
               active={activeFilter}
               partnerName={partner?.displayName ?? "Parceiro(a)"}
               basePath="/dashboard/transactions"
+              extraParams={{ ano: String(year), mes: String(month) }}
             />
           </CardHeader>
           <CardContent>
