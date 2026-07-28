@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { requireHousehold } from "@/lib/current-household";
 import { listAccounts } from "@/domain/accounts/list-accounts";
 import { listCategories } from "@/domain/categories/list-categories";
 import { listTransactionsForMonth } from "@/domain/transactions/list-transactions-for-month";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionSummary } from "@/components/transaction-summary";
 import { TransactionForm } from "./transaction-form";
 import { createTransactionAction, deleteTransactionAction, updateTransactionAction } from "./actions";
@@ -47,7 +48,7 @@ export default async function TransactionsPage({
   ]);
 
   return (
-    <div className="flex w-full max-w-lg flex-col gap-4">
+    <div className="flex w-full max-w-lg flex-col gap-4 lg:max-w-5xl">
       <h1 className="text-xl font-semibold">Transações</h1>
 
       {erro && (
@@ -66,6 +67,14 @@ export default async function TransactionsPage({
       <Card>
         <CardHeader>
           <CardTitle>Nova transação</CardTitle>
+          <CardAction>
+            <Button
+              render={<Link href="/dashboard/transactions/import">Importar extrato</Link>}
+              nativeButton={false}
+              variant="outline"
+              size="sm"
+            />
+          </CardAction>
         </CardHeader>
         <CardContent>
           <TransactionForm
@@ -94,7 +103,7 @@ export default async function TransactionsPage({
               Nenhuma transação registrada neste mês ainda.
             </p>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
               {transactions.map((transaction) => (
                 <li
                   key={transaction.id}
