@@ -35,10 +35,10 @@ export default async function GoalsPage({
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4 lg:max-w-5xl">
-      <h1 className="text-xl font-semibold">Metas</h1>
+      <h1 className="font-heading text-xl font-semibold">Metas</h1>
 
       {errorMessage && (
-        <p className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+        <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
           {errorMessage}
         </p>
       )}
@@ -79,7 +79,7 @@ export default async function GoalsPage({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="targetDate">
-                Data alvo <span className="text-zinc-500">(opcional)</span>
+                Data alvo <span className="text-muted-foreground">(opcional)</span>
               </Label>
               <Input id="targetDate" name="targetDate" type="date" />
             </div>
@@ -94,7 +94,7 @@ export default async function GoalsPage({
         </CardHeader>
         <CardContent>
           {activeGoals.length === 0 ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">Nenhuma meta ativa ainda.</p>
+            <p className="text-sm text-muted-foreground">Nenhuma meta ativa ainda.</p>
           ) : (
             <ul className="flex flex-col gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-3">
               {activeGoals.map((goal) => (
@@ -133,11 +133,12 @@ function GoalListItem({
   const percent = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
 
   return (
-    <li className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+    <li className="flex flex-col gap-3 rounded-lg border border-border p-3">
       <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium">{goal.name}</span>
-        <span className="text-xs text-zinc-600 dark:text-zinc-400">
-          {formatBRL(goal.currentAmount)} de {formatBRL(goal.targetAmount)}
+        <span className="font-heading text-base font-medium">{goal.name}</span>
+        <span className="text-2xl font-semibold">{formatBRL(goal.currentAmount)}</span>
+        <span className="text-xs text-muted-foreground">
+          de {formatBRL(goal.targetAmount)}
           {goal.targetDate && ` · até ${formatDateBR(goal.targetDate)}`}
         </span>
       </div>
