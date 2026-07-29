@@ -5,6 +5,7 @@ import { listRecurringTemplates } from "@/domain/recurring/list-recurring-templa
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/currency";
+import { memberAccent } from "@/lib/member-color";
 import { RecurringTemplateForm } from "./recurring-template-form";
 import {
   createRecurringTemplateAction,
@@ -73,10 +74,16 @@ export default async function RecurringPage({
                 const categoryName = template.categoryId
                   ? categories.find((c) => c.id === template.categoryId)?.name
                   : null;
+                const ownerIndex = template.ownerHouseholdMemberId
+                  ? household.members.findIndex((m) => m.id === template.ownerHouseholdMemberId)
+                  : -1;
                 const ownerName = template.ownerHouseholdMemberId
                   ? (household.members.find((m) => m.id === template.ownerHouseholdMemberId)
                       ?.displayName ?? "—")
                   : "Compartilhado";
+                const ownerColor =
+                  ownerIndex === 0 || ownerIndex === 1 ? memberAccent(ownerIndex).color : undefined;
+                const leadingParts = [categoryName, accountName ?? "—"].filter(Boolean);
 
                 return (
                   <li
@@ -99,7 +106,10 @@ export default async function RecurringPage({
                       </span>
                     </div>
                     <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {[categoryName, accountName ?? "—", ownerName].filter(Boolean).join(" · ")}
+                      {leadingParts.length > 0 && `${leadingParts.join(" · ")} · `}
+                      <span style={ownerColor ? { color: ownerColor } : undefined}>
+                        {ownerName}
+                      </span>
                     </p>
                     <p className="text-xs font-medium">
                       {template.active ? (

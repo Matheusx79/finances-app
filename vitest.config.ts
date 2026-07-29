@@ -8,7 +8,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["src/domain/**/*.test.ts", "src/app/**/*.test.ts"],
+    include: ["src/domain/**/*.test.ts", "src/app/**/*.test.ts", "src/lib/**/*.test.ts"],
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
     // Domain tests hit a real local Postgres via the Supabase CLI stack —
