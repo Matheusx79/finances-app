@@ -11,10 +11,10 @@ export default async function CategoriesPage() {
   const categories = await listCategories(supabase, { householdId });
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-4">
+    <div className="flex w-full max-w-sm flex-col gap-4 lg:max-w-5xl">
       <h1 className="text-xl font-semibold">Categorias</h1>
 
-      <Card>
+      <Card className="lg:max-w-sm">
         <CardHeader>
           <CardTitle>Nova categoria</CardTitle>
         </CardHeader>
@@ -39,7 +39,7 @@ export default async function CategoriesPage() {
               Nenhuma categoria cadastrada ainda.
             </p>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
               {categories.map((category) => (
                 <li
                   key={category.id}

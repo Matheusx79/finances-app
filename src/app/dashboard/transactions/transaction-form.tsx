@@ -35,7 +35,10 @@ export function TransactionForm({
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form
+      action={action}
+      className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-4 lg:gap-y-3"
+    >
       {transaction && <input type="hidden" name="transactionId" value={transaction.id} />}
 
       <div className="flex flex-col gap-2">
@@ -132,7 +135,7 @@ export function TransactionForm({
         </select>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 lg:col-span-2">
         <Label htmlFor={`note-${fieldId}`}>Observação</Label>
         <Input
           id={`note-${fieldId}`}
@@ -142,7 +145,9 @@ export function TransactionForm({
         />
       </div>
 
-      <Button type="submit">{submitLabel}</Button>
+      <Button type="submit" className="lg:col-span-2">
+        {submitLabel}
+      </Button>
     </form>
   );
 }

@@ -50,84 +50,88 @@ export default async function DashboardPage({
   }
 
   return (
-    <div className="flex w-full max-w-lg flex-col items-center gap-4">
-      <div className="flex flex-col items-center gap-2 text-center">
+    <div className="flex w-full max-w-lg flex-col items-center gap-4 lg:max-w-6xl lg:items-stretch">
+      <div className="flex flex-col items-center gap-2 text-center lg:items-start lg:text-left">
         <h1 className="text-2xl font-semibold">Bem-vindo, {displayName}!</h1>
         {household && <p className="text-zinc-600 dark:text-zinc-400">{household.name}</p>}
       </div>
 
       {household && <MonthNav year={year} month={month} basePath="/dashboard" />}
 
-      {household && budgetProgress && (
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Receita de {formatMonthYearBR(year, month)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
-              {formatBRL(budgetProgress.totalIncome)}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <div className="grid w-full gap-4 lg:grid-cols-2 lg:items-start">
+        <div className="flex flex-col gap-4">
+          {household && budgetProgress && (
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>Receita de {formatMonthYearBR(year, month)}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
+                  {formatBRL(budgetProgress.totalIncome)}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
-      {household && budgetProgress && (
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Orçamento por categoria — {formatMonthYearBR(year, month)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {budgetProgress.categories.length === 0 ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Nenhuma categoria cadastrada ainda.
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {budgetProgress.categories.map((category) => (
-                  <li key={category.categoryId}>
-                    <CategoryBudgetCard
-                      categoryName={category.categoryName}
-                      spentAmount={category.spentAmount}
-                      budgetAmount={category.budgetAmount}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      )}
+          {household && budgetProgress && (
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>Orçamento por categoria — {formatMonthYearBR(year, month)}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {budgetProgress.categories.length === 0 ? (
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    Nenhuma categoria cadastrada ainda.
+                  </p>
+                ) : (
+                  <ul className="flex flex-col gap-3">
+                    {budgetProgress.categories.map((category) => (
+                      <li key={category.categoryId}>
+                        <CategoryBudgetCard
+                          categoryName={category.categoryName}
+                          spentAmount={category.spentAmount}
+                          budgetAmount={category.budgetAmount}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
-      {household && (
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Transações recentes de {formatMonthYearBR(year, month)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {transactions.length === 0 ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                Nenhuma transação registrada neste mês ainda.
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {transactions.map((transaction) => (
-                  <li
-                    key={transaction.id}
-                    className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
-                  >
-                    <TransactionSummary
-                      transaction={transaction}
-                      accounts={accounts}
-                      categories={categories}
-                      members={household.members}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      )}
+        {household && (
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>Transações recentes de {formatMonthYearBR(year, month)}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {transactions.length === 0 ? (
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  Nenhuma transação registrada neste mês ainda.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {transactions.map((transaction) => (
+                    <li
+                      key={transaction.id}
+                      className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
+                    >
+                      <TransactionSummary
+                        transaction={transaction}
+                        accounts={accounts}
+                        categories={categories}
+                        members={household.members}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

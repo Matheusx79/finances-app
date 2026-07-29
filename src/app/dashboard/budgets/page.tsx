@@ -16,7 +16,7 @@ export default async function BudgetsPage() {
   const progress = await getBudgetProgressForMonth(supabase, { householdId, year, month });
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-4">
+    <div className="flex w-full max-w-sm flex-col gap-4 lg:max-w-5xl">
       <h1 className="text-xl font-semibold">Orçamentos</h1>
 
       <Card>
@@ -29,7 +29,7 @@ export default async function BudgetsPage() {
               Nenhuma categoria cadastrada ainda.
             </p>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
               {progress.categories.map((category) => (
                 <li key={category.categoryId}>
                   <CategoryBudgetCard

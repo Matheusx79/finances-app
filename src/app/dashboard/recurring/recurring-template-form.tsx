@@ -33,7 +33,10 @@ export function RecurringTemplateForm({
   const fieldId = template?.id ?? "new";
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form
+      action={action}
+      className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-4 lg:gap-y-3"
+    >
       {template && <input type="hidden" name="templateId" value={template.id} />}
 
       <div className="flex flex-col gap-2">
@@ -136,7 +139,9 @@ export function RecurringTemplateForm({
         </select>
       </div>
 
-      <Button type="submit">{submitLabel}</Button>
+      <Button type="submit" className="lg:col-span-2">
+        {submitLabel}
+      </Button>
     </form>
   );
 }

@@ -33,7 +33,7 @@ export default async function RecurringPage({
   ]);
 
   return (
-    <div className="flex w-full max-w-lg flex-col gap-4">
+    <div className="flex w-full max-w-lg flex-col gap-4 lg:max-w-5xl">
       <h1 className="text-xl font-semibold">Transações recorrentes</h1>
 
       {erro && (
@@ -67,7 +67,7 @@ export default async function RecurringPage({
               Nenhum modelo recorrente cadastrado ainda.
             </p>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
               {templates.map((template) => {
                 const accountName = accounts.find((a) => a.id === template.accountId)?.name;
                 const categoryName = template.categoryId
