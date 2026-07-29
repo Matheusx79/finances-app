@@ -42,7 +42,7 @@ export function TransactionSummary({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm text-zinc-600 dark:text-zinc-400">
+        <span className="text-sm text-muted-foreground">
           {formatDateBR(transaction.date)}
         </span>
         <span
@@ -56,12 +56,12 @@ export function TransactionSummary({
           {formatBRL(transaction.amount)}
         </span>
       </div>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-sm text-muted-foreground">
         {leadingParts.length > 0 && `${leadingParts.join(" · ")} · `}
         <span style={ownerColor ? { color: ownerColor } : undefined}>{ownerName}</span>
       </p>
       {transaction.note && (
-        <p className="text-sm text-zinc-600 italic dark:text-zinc-400">{transaction.note}</p>
+        <p className="text-sm text-muted-foreground italic">{transaction.note}</p>
       )}
       {tags && transaction.tagIds.length > 0 && (
         <div className="flex flex-wrap gap-1">
@@ -70,7 +70,7 @@ export function TransactionSummary({
             return tagName ? (
               <span
                 key={tagId}
-                className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground"
               >
                 {tagName}
               </span>

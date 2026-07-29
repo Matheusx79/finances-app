@@ -104,7 +104,7 @@ export function TransactionForm({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor={`category-${fieldId}`}>
-          Categoria <span className="text-zinc-500">(obrigatória para despesas)</span>
+          Categoria <span className="text-muted-foreground">(obrigatória para despesas)</span>
         </Label>
         <select
           id={`category-${fieldId}`}
