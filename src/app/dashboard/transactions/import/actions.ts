@@ -5,11 +5,12 @@ import { revalidatePath } from "next/cache";
 import { requireHousehold } from "@/lib/current-household";
 import { listAccounts } from "@/domain/accounts/list-accounts";
 import { parseOfxStatement } from "@/domain/ofx/parse-ofx-statement";
+import { parseCardBillPaste } from "@/domain/card-bill/parse-card-bill-paste";
 import {
   findExistingExternalIds,
   importTransactions,
   type ImportOfxRow,
-} from "@/domain/ofx/import-transactions";
+} from "@/domain/transactions/import-transactions";
 import type { Account } from "@/domain/accounts/types";
 import type { HouseholdMember } from "@/domain/household/types";
 import type { TransactionType } from "@/domain/transactions/types";
@@ -73,6 +74,50 @@ export async function uploadOfxAction(formData: FormData) {
   const batchRows: OfxBatchRow[] = parsedRows.map((row) => ({
     ...row,
     duplicate: Boolean(row.fitid && existingFitids.has(row.fitid)),
+  }));
+
+  redirect(
+    importUrl({
+      batch: encodeOfxBatch(batchRows),
+      accountId,
+      ownerId,
+    }),
+  );
+}
+
+export async function pasteCardBillAction(formData: FormData) {
+  const pasteText = String(formData.get("paste") ?? "");
+  const accountId = String(formData.get("accountId") ?? "");
+  const ownerId = String(formData.get("ownerId") ?? "");
+
+  if (!pasteText.trim() || !accountId || !ownerId) {
+    redirect(importUrl({ tab: "fatura", erro: "campos-obrigatorios" }));
+  }
+
+  const { supabase, householdId, household } = await requireHousehold();
+
+  const accounts = await listAccounts(supabase, { householdId });
+  if (!accountAndOwnerAreValid({ accountId, ownerId, accounts, members: household.members })) {
+    redirect(importUrl({ tab: "fatura", erro: "conta-ou-responsavel-invalido" }));
+  }
+
+  let parsedRows;
+  try {
+    parsedRows = parseCardBillPaste(pasteText);
+  } catch {
+    redirect(importUrl({ tab: "fatura", erro: "fatura-invalida" }));
+  }
+
+  const externalIds = parsedRows.map((row) => row.externalId);
+  const existingExternalIds = await findExistingExternalIds(supabase, { accountId, fitids: externalIds });
+
+  const batchRows: OfxBatchRow[] = parsedRows.map((row) => ({
+    date: row.date,
+    amount: row.amount,
+    type: row.type,
+    description: row.description,
+    fitid: row.externalId,
+    duplicate: existingExternalIds.has(row.externalId),
   }));
 
   redirect(

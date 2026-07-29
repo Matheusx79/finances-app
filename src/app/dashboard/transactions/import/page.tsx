@@ -3,23 +3,32 @@ import { requireHousehold } from "@/lib/current-household";
 import { listAccounts } from "@/domain/accounts/list-accounts";
 import { listCategories } from "@/domain/categories/list-categories";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { uploadOfxAction, confirmOfxImportAction } from "./actions";
+import { uploadOfxAction, confirmOfxImportAction, pasteCardBillAction } from "./actions";
 import { OfxUploadForm } from "./ofx-upload-form";
 import { OfxStagingForm } from "./ofx-staging-form";
+import { CardBillPasteForm } from "./card-bill-paste-form";
 import { decodeOfxBatch } from "./batch-codec";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  "campos-obrigatorios": "Selecione o arquivo, a conta e o responsável.",
+  "campos-obrigatorios": "Preencha todos os campos obrigatórios.",
   "conta-ou-responsavel-invalido": "Conta ou responsável inválido.",
   "ofx-invalido": "Não foi possível ler esse arquivo OFX.",
+  "fatura-invalida": "Não foi possível interpretar o texto colado. Verifique se é um JSON válido.",
 };
 
 export default async function ImportOfxPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string; batch?: string; accountId?: string; ownerId?: string }>;
+  searchParams: Promise<{
+    erro?: string;
+    batch?: string;
+    accountId?: string;
+    ownerId?: string;
+    tab?: string;
+  }>;
 }) {
-  const { erro, batch, accountId, ownerId } = await searchParams;
+  const { erro, batch, accountId, ownerId, tab } = await searchParams;
+  const activeTab = tab === "fatura" ? "fatura" : "ofx";
   const { supabase, householdId, household } = await requireHousehold();
 
   const [accounts, categories] = await Promise.all([
@@ -45,7 +54,7 @@ export default async function ImportOfxPage({
 
     return (
       <div className="flex w-full max-w-lg flex-col gap-4 lg:max-w-3xl">
-        <h1 className="text-xl font-semibold">Importar extrato</h1>
+        <h1 className="text-xl font-semibold">Importar transações</h1>
 
         <Card>
           <CardHeader>
@@ -69,7 +78,7 @@ export default async function ImportOfxPage({
 
   return (
     <div className="flex w-full max-w-lg flex-col gap-4 lg:max-w-3xl">
-      <h1 className="text-xl font-semibold">Importar extrato</h1>
+      <h1 className="text-xl font-semibold">Importar transações</h1>
 
       {errorMessage && (
         <p className="text-sm text-red-600" role="alert">
@@ -77,14 +86,52 @@ export default async function ImportOfxPage({
         </p>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Selecionar arquivo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <OfxUploadForm action={uploadOfxAction} accounts={accounts} members={household.members} />
-        </CardContent>
-      </Card>
+      <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-800">
+        <a
+          href="/dashboard/transactions/import?tab=ofx"
+          className={`px-3 py-2 text-sm font-medium ${
+            activeTab === "ofx"
+              ? "border-b-2 border-primary text-foreground"
+              : "text-zinc-500 hover:text-foreground"
+          }`}
+        >
+          Extrato bancário
+        </a>
+        <a
+          href="/dashboard/transactions/import?tab=fatura"
+          className={`px-3 py-2 text-sm font-medium ${
+            activeTab === "fatura"
+              ? "border-b-2 border-primary text-foreground"
+              : "text-zinc-500 hover:text-foreground"
+          }`}
+        >
+          Fatura do cartão
+        </a>
+      </div>
+
+      {activeTab === "ofx" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Selecionar arquivo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OfxUploadForm action={uploadOfxAction} accounts={accounts} members={household.members} />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Colar fatura</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardBillPasteForm
+              action={pasteCardBillAction}
+              accounts={accounts}
+              members={household.members}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
