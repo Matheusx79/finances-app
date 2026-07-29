@@ -16,7 +16,9 @@ export function SidebarNav() {
       aria-label="Navegação principal"
       className="fixed inset-y-0 left-0 z-10 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar p-4 lg:flex"
     >
-      <p className="px-2 pb-4 text-lg font-semibold text-sidebar-foreground">Finanças</p>
+      <p className="font-heading px-2 pb-4 text-lg font-semibold text-sidebar-foreground">
+        Finanças
+      </p>
 
       <ul className="flex flex-1 flex-col gap-1">
         {NAV_DESTINATIONS.map(({ href, label, icon: Icon, exact }) => {
