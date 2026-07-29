@@ -78,7 +78,7 @@ export function RecurringTemplateForm({
           defaultValue={template?.dayOfMonth ?? 1}
           required
         />
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           Em meses mais curtos, lança no último dia do mês.
         </p>
       </div>
@@ -105,7 +105,7 @@ export function RecurringTemplateForm({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor={`category-${fieldId}`}>
-          Categoria <span className="text-zinc-500">(obrigatória para despesas)</span>
+          Categoria <span className="text-muted-foreground">(obrigatória para despesas)</span>
         </Label>
         <select
           id={`category-${fieldId}`}

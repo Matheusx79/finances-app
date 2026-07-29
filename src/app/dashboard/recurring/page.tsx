@@ -35,10 +35,10 @@ export default async function RecurringPage({
 
   return (
     <div className="flex w-full max-w-lg flex-col gap-4 lg:max-w-5xl">
-      <h1 className="text-xl font-semibold">Transações recorrentes</h1>
+      <h1 className="font-heading text-xl font-semibold">Transações recorrentes</h1>
 
       {erro && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {ERROR_MESSAGES[erro] ?? "Não foi possível salvar o modelo recorrente."}
         </p>
       )}
@@ -64,7 +64,7 @@ export default async function RecurringPage({
         </CardHeader>
         <CardContent>
           {templates.length === 0 ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               Nenhum modelo recorrente cadastrado ainda.
             </p>
           ) : (
@@ -88,7 +88,7 @@ export default async function RecurringPage({
                 return (
                   <li
                     key={template.id}
-                    className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
+                    className="flex flex-col gap-2 rounded-lg border border-border p-3"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span
@@ -101,11 +101,11 @@ export default async function RecurringPage({
                         {template.type === "expense" ? "-" : "+"}
                         {formatBRL(template.amount)}
                       </span>
-                      <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                      <span className="text-sm text-muted-foreground">
                         Todo dia {template.dayOfMonth}
                       </span>
                     </div>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    <p className="text-sm text-muted-foreground">
                       {leadingParts.length > 0 && `${leadingParts.join(" · ")} · `}
                       <span style={ownerColor ? { color: ownerColor } : undefined}>
                         {ownerName}
@@ -115,12 +115,12 @@ export default async function RecurringPage({
                       {template.active ? (
                         <span className="text-green-600 dark:text-green-400">Ativo</span>
                       ) : (
-                        <span className="text-zinc-500">Pausado</span>
+                        <span className="text-muted-foreground">Pausado</span>
                       )}
                     </p>
 
                     <details>
-                      <summary className="cursor-pointer text-sm text-zinc-600 underline dark:text-zinc-400">
+                      <summary className="cursor-pointer text-sm text-muted-foreground underline">
                         Editar
                       </summary>
                       <div className="mt-2">
