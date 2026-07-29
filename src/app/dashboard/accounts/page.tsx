@@ -53,13 +53,14 @@ export default async function AccountsPage() {
                   <span className="text-sm font-medium whitespace-nowrap">
                     {formatBRL(balances.get(account.id) ?? 0)}
                   </span>
-                  <form action={renameAccountAction} className="flex flex-1 gap-2">
+                  <form action={renameAccountAction} className="flex flex-1 gap-2 min-w-0">
                     <input type="hidden" name="accountId" value={account.id} />
                     <Input
                       name="name"
                       defaultValue={account.name}
                       aria-label={`Nome da conta ${account.name}`}
                       required
+                      className="min-w-0"
                     />
                     <Button type="submit" variant="outline" size="sm">
                       Salvar

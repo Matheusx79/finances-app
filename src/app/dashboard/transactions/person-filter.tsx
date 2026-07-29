@@ -1,24 +1,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { memberAccent } from "@/lib/member-color";
+import { buildFilterHref } from "@/lib/filter-href";
 
 export type PersonFilterValue = "casal" | "eu" | "parceiro";
-
-function buildFilterHref(
-  basePath: string,
-  responsavel: "eu" | "parceiro" | undefined,
-  extraParams?: Record<string, string | undefined>,
-): string {
-  const params = new URLSearchParams();
-  if (responsavel) params.set("responsavel", responsavel);
-  if (extraParams) {
-    for (const [key, value] of Object.entries(extraParams)) {
-      if (value) params.set(key, value);
-    }
-  }
-  const query = params.toString();
-  return query ? `${basePath}?${query}` : basePath;
-}
 
 /**
  * Three-way filter for the transaction feed, expressed as plain links so the
@@ -51,12 +36,21 @@ export function PersonFilter({
     href: string;
     memberIndex?: 0 | 1;
   }[] = [
-    { value: "casal", label: "Casal", href: buildFilterHref(basePath, undefined, extraParams) },
-    { value: "eu", label: "Eu", href: buildFilterHref(basePath, "eu", extraParams), memberIndex: meIndex },
+    {
+      value: "casal",
+      label: "Casal",
+      href: buildFilterHref(basePath, { name: "responsavel", value: undefined }, extraParams),
+    },
+    {
+      value: "eu",
+      label: "Eu",
+      href: buildFilterHref(basePath, { name: "responsavel", value: "eu" }, extraParams),
+      memberIndex: meIndex,
+    },
     {
       value: "parceiro",
       label: partnerName,
-      href: buildFilterHref(basePath, "parceiro", extraParams),
+      href: buildFilterHref(basePath, { name: "responsavel", value: "parceiro" }, extraParams),
       memberIndex: partnerIndex,
     },
   ];

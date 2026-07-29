@@ -1,22 +1,7 @@
 import Link from "next/link";
 import type { Tag } from "@/domain/tags/types";
 import { Button } from "@/components/ui/button";
-
-function buildFilterHref(
-  basePath: string,
-  tagId: string | undefined,
-  extraParams?: Record<string, string | undefined>,
-): string {
-  const params = new URLSearchParams();
-  if (tagId) params.set("etiqueta", tagId);
-  if (extraParams) {
-    for (const [key, value] of Object.entries(extraParams)) {
-      if (value) params.set(key, value);
-    }
-  }
-  const query = params.toString();
-  return query ? `${basePath}?${query}` : basePath;
-}
+import { buildFilterHref } from "@/lib/filter-href";
 
 /**
  * Etiqueta filter for the transaction feed, same plain-links pattern as
@@ -39,7 +24,11 @@ export function TagFilter({
   return (
     <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar transações por etiqueta">
       <Button
-        render={<Link href={buildFilterHref(basePath, undefined, extraParams)}>Todas</Link>}
+        render={
+          <Link href={buildFilterHref(basePath, { name: "etiqueta", value: undefined }, extraParams)}>
+            Todas
+          </Link>
+        }
         nativeButton={false}
         variant={!active ? "default" : "outline"}
         size="sm"
@@ -48,7 +37,9 @@ export function TagFilter({
         <Button
           key={tag.id}
           render={
-            <Link href={buildFilterHref(basePath, tag.id, extraParams)}>{tag.name}</Link>
+            <Link href={buildFilterHref(basePath, { name: "etiqueta", value: tag.id }, extraParams)}>
+              {tag.name}
+            </Link>
           }
           nativeButton={false}
           variant={active === tag.id ? "default" : "outline"}
