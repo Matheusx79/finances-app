@@ -5,14 +5,17 @@ import { listAccounts } from "@/domain/accounts/list-accounts";
 import { listCategories } from "@/domain/categories/list-categories";
 import { listTransactionsForMonth } from "@/domain/transactions/list-transactions-for-month";
 import { getBudgetProgressForMonth } from "@/domain/budgets/get-budget-progress-for-month";
+import { getMonthlyCashFlow } from "@/domain/reports/get-monthly-cash-flow";
 import type { Account } from "@/domain/accounts/types";
 import type { Category } from "@/domain/categories/types";
 import type { Transaction } from "@/domain/transactions/types";
 import type { BudgetProgressForMonth } from "@/domain/budgets/types";
+import type { MonthlyCashFlow } from "@/domain/reports/get-monthly-cash-flow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionSummary } from "@/components/transaction-summary";
 import { CategoryBudgetCard } from "@/components/category-budget-progress";
 import { CategorySpendingChart } from "@/components/category-spending-chart";
+import { CashFlowChart } from "@/components/cash-flow-chart";
 import { formatBRL } from "@/lib/currency";
 import { MonthNav, formatMonthYearBR, resolveMonthParams } from "./month-nav";
 
@@ -40,13 +43,15 @@ export default async function DashboardPage({
   let categories: Category[] = [];
   let transactions: Transaction[] = [];
   let budgetProgress: BudgetProgressForMonth | null = null;
+  let cashFlow: MonthlyCashFlow[] = [];
 
   if (household) {
-    [accounts, categories, transactions, budgetProgress] = await Promise.all([
+    [accounts, categories, transactions, budgetProgress, cashFlow] = await Promise.all([
       listAccounts(supabase, { householdId: household.id }),
       listCategories(supabase, { householdId: household.id }),
       listTransactionsForMonth(supabase, { householdId: household.id, year, month }),
       getBudgetProgressForMonth(supabase, { householdId: household.id, year, month }),
+      getMonthlyCashFlow(supabase, { householdId: household.id, monthsBack: 6 }),
     ]);
   }
 
@@ -108,6 +113,17 @@ export default async function DashboardPage({
               </CardHeader>
               <CardContent>
                 <CategorySpendingChart categories={budgetProgress.categories} />
+              </CardContent>
+            </Card>
+          )}
+
+          {household && (
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>Fluxo de caixa por pessoa</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CashFlowChart cashFlow={cashFlow} members={household.members} />
               </CardContent>
             </Card>
           )}
