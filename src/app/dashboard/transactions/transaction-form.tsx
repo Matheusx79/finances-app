@@ -1,6 +1,7 @@
 import type { Account } from "@/domain/accounts/types";
 import type { Category } from "@/domain/categories/types";
 import type { HouseholdMember } from "@/domain/household/types";
+import type { Tag } from "@/domain/tags/types";
 import type { Transaction } from "@/domain/transactions/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ export function TransactionForm({
   accounts,
   categories,
   members,
+  tags,
   submitLabel,
   transaction,
 }: {
@@ -28,6 +30,7 @@ export function TransactionForm({
   accounts: Account[];
   categories: Category[];
   members: HouseholdMember[];
+  tags: Tag[];
   submitLabel: string;
   transaction?: Transaction;
 }) {
@@ -134,6 +137,25 @@ export function TransactionForm({
           ))}
         </select>
       </div>
+
+      {tags.length > 0 && (
+        <div className="flex flex-col gap-2 lg:col-span-2">
+          <Label>Etiquetas</Label>
+          <div className="flex flex-wrap gap-3">
+            {tags.map((tag) => (
+              <label key={tag.id} className="flex items-center gap-1.5 text-sm">
+                <input
+                  type="checkbox"
+                  name="tagIds"
+                  value={tag.id}
+                  defaultChecked={transaction?.tagIds.includes(tag.id) ?? false}
+                />
+                {tag.name}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-2 lg:col-span-2">
         <Label htmlFor={`note-${fieldId}`}>Observação</Label>

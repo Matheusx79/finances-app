@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TRANSACTION_COLUMNS, toTransaction, type Transaction, type TransactionType } from "./types";
+import { replaceTransactionTags } from "./replace-transaction-tags";
 
 export async function updateTransaction(
   supabase: SupabaseClient,
@@ -12,6 +13,7 @@ export async function updateTransaction(
     categoryId,
     ownerHouseholdMemberId,
     note,
+    tagIds,
   }: {
     transactionId: string;
     type: TransactionType;
@@ -21,6 +23,7 @@ export async function updateTransaction(
     categoryId?: string | null;
     ownerHouseholdMemberId?: string | null;
     note?: string | null;
+    tagIds?: string[];
   },
 ): Promise<Transaction> {
   const { data, error } = await supabase
@@ -39,5 +42,6 @@ export async function updateTransaction(
     .single();
   if (error) throw error;
 
-  return toTransaction(data);
+  const resolvedTagIds = await replaceTransactionTags(supabase, transactionId, tagIds);
+  return toTransaction(data, resolvedTagIds);
 }

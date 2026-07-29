@@ -16,8 +16,9 @@ function parseTransactionFields(formData: FormData) {
   const categoryId = String(formData.get("categoryId") ?? "") || null;
   const ownerHouseholdMemberId = String(formData.get("owner") ?? "") || null;
   const note = String(formData.get("note") ?? "").trim() || null;
+  const tagIds = formData.getAll("tagIds").map(String);
 
-  return { type, amount, date, accountId, categoryId, ownerHouseholdMemberId, note };
+  return { type, amount, date, accountId, categoryId, ownerHouseholdMemberId, note, tagIds };
 }
 
 // Category is required for expenses (per spec/ticket); the form always shows
@@ -30,7 +31,7 @@ function isMissingRequiredCategory(type: TransactionType, categoryId: string | n
 }
 
 export async function createTransactionAction(formData: FormData) {
-  const { type, amount, date, accountId, categoryId, ownerHouseholdMemberId, note } =
+  const { type, amount, date, accountId, categoryId, ownerHouseholdMemberId, note, tagIds } =
     parseTransactionFields(formData);
   if (!date || !accountId || !amount || amount <= 0) return;
   if (isMissingRequiredCategory(type, categoryId)) {
@@ -47,6 +48,7 @@ export async function createTransactionAction(formData: FormData) {
     categoryId,
     ownerHouseholdMemberId,
     note,
+    tagIds,
   });
 
   revalidatePath("/dashboard/transactions");
@@ -55,7 +57,7 @@ export async function createTransactionAction(formData: FormData) {
 
 export async function updateTransactionAction(formData: FormData) {
   const transactionId = String(formData.get("transactionId") ?? "");
-  const { type, amount, date, accountId, categoryId, ownerHouseholdMemberId, note } =
+  const { type, amount, date, accountId, categoryId, ownerHouseholdMemberId, note, tagIds } =
     parseTransactionFields(formData);
   if (!transactionId || !date || !accountId || !amount || amount <= 0) return;
   if (isMissingRequiredCategory(type, categoryId)) {
@@ -75,6 +77,7 @@ export async function updateTransactionAction(formData: FormData) {
     categoryId,
     ownerHouseholdMemberId,
     note,
+    tagIds,
   });
 
   revalidatePath("/dashboard/transactions");

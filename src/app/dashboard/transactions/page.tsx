@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireHousehold } from "@/lib/current-household";
 import { listAccounts } from "@/domain/accounts/list-accounts";
 import { listCategories } from "@/domain/categories/list-categories";
+import { listTags } from "@/domain/tags/list-tags";
 import { listTransactionsForMonth } from "@/domain/transactions/list-transactions-for-month";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { TransactionSummary } from "@/components/transaction-summary";
 import { TransactionForm } from "./transaction-form";
 import { createTransactionAction, deleteTransactionAction, updateTransactionAction } from "./actions";
 import { PersonFilter, type PersonFilterValue } from "./person-filter";
+import { TagFilter } from "./tag-filter";
 import { MonthNav, formatMonthYearBR, resolveMonthParams } from "../month-nav";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -18,14 +20,26 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string; responsavel?: string; ano?: string; mes?: string }>;
+  searchParams: Promise<{
+    erro?: string;
+    responsavel?: string;
+    ano?: string;
+    mes?: string;
+    etiqueta?: string;
+  }>;
 }) {
-  const { erro, responsavel, ano, mes } = await searchParams;
+  const { erro, responsavel, ano, mes, etiqueta } = await searchParams;
   const { year, month } = resolveMonthParams(ano, mes);
   const { supabase, userId, householdId, household } = await requireHousehold();
 
   const me = household.members.find((member) => member.userId === userId);
   const partner = household.members.find((member) => member.userId !== userId);
+  const toMemberIndex = (memberId: string | undefined): 0 | 1 | undefined => {
+    const index = memberId ? household.members.findIndex((m) => m.id === memberId) : -1;
+    return index === 0 || index === 1 ? index : undefined;
+  };
+  const meIndex = toMemberIndex(me?.id);
+  const partnerIndex = toMemberIndex(partner?.id);
 
   const activeFilter: PersonFilterValue =
     responsavel === "eu" && me
@@ -36,16 +50,21 @@ export default async function TransactionsPage({
   const ownerHouseholdMemberId =
     activeFilter === "eu" ? me?.id : activeFilter === "parceiro" ? partner?.id : undefined;
 
-  const [accounts, categories, transactions] = await Promise.all([
+  const [accounts, categories, tags] = await Promise.all([
     listAccounts(supabase, { householdId }),
     listCategories(supabase, { householdId }),
-    listTransactionsForMonth(supabase, {
-      householdId,
-      year,
-      month,
-      ownerHouseholdMemberId,
-    }),
+    listTags(supabase, { householdId }),
   ]);
+
+  const activeTagId = tags.some((tag) => tag.id === etiqueta) ? etiqueta : undefined;
+
+  const transactions = await listTransactionsForMonth(supabase, {
+    householdId,
+    year,
+    month,
+    ownerHouseholdMemberId,
+    tagId: activeTagId,
+  });
 
   return (
     <div className="flex w-full max-w-lg flex-col gap-4 lg:max-w-5xl">
@@ -61,7 +80,7 @@ export default async function TransactionsPage({
         year={year}
         month={month}
         basePath="/dashboard/transactions"
-        extraParams={{ responsavel }}
+        extraParams={{ responsavel, etiqueta: activeTagId }}
       />
 
       <Card>
@@ -82,6 +101,7 @@ export default async function TransactionsPage({
             accounts={accounts}
             categories={categories}
             members={household.members}
+            tags={tags}
             submitLabel="Adicionar"
           />
         </CardContent>
@@ -93,8 +113,16 @@ export default async function TransactionsPage({
           <PersonFilter
             active={activeFilter}
             partnerName={partner?.displayName ?? "Parceiro(a)"}
+            meIndex={meIndex}
+            partnerIndex={partnerIndex}
             basePath="/dashboard/transactions"
-            extraParams={{ ano: String(year), mes: String(month) }}
+            extraParams={{ ano: String(year), mes: String(month), etiqueta: activeTagId }}
+          />
+          <TagFilter
+            tags={tags}
+            active={activeTagId}
+            basePath="/dashboard/transactions"
+            extraParams={{ responsavel, ano: String(year), mes: String(month) }}
           />
         </CardHeader>
         <CardContent>
@@ -114,6 +142,7 @@ export default async function TransactionsPage({
                     accounts={accounts}
                     categories={categories}
                     members={household.members}
+                    tags={tags}
                   />
 
                   <details>
@@ -131,11 +160,13 @@ export default async function TransactionsPage({
                           transaction.categoryId,
                           transaction.ownerHouseholdMemberId,
                           transaction.note,
+                          transaction.tagIds.join(","),
                         ].join(":")}
                         action={updateTransactionAction}
                         accounts={accounts}
                         categories={categories}
                         members={household.members}
+                        tags={tags}
                         submitLabel="Salvar"
                         transaction={transaction}
                       />

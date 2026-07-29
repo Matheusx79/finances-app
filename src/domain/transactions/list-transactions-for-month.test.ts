@@ -7,6 +7,7 @@ import {
   signInAs,
 } from "../test-support/household-fixtures";
 import { createAccount } from "../accounts/create-account";
+import { createTag } from "../tags/create-tag";
 import { createTransaction } from "./create-transaction";
 import { listTransactionsForMonth } from "./list-transactions-for-month";
 
@@ -366,6 +367,106 @@ describe("listTransactionsForMonth", () => {
       await cleanupTestData(admin, {
         householdIds: [householdId, otherHouseholdId],
         userIds: [userA.id, userB.id, outsider.id, outsiderPartner.id],
+      });
+    }
+  });
+
+  it("round-trips tagIds through listTransactionsForMonth", async () => {
+    const admin = createAdminClient();
+    const userA = await createTestUser(admin, "member-a");
+    const userB = await createTestUser(admin, "member-b");
+    const householdId = await createTestHousehold(admin, "Test Household", [
+      { user: userA, displayName: "Alice" },
+      { user: userB, displayName: "Bob" },
+    ]);
+
+    try {
+      const anon = createAnonClient();
+      await signInAs(anon, userA);
+      const account = await createAccount(anon, { householdId, name: "Carteira" });
+      const tagA = await createTag(anon, { householdId, name: "Reembolsável" });
+      const tagB = await createTag(anon, { householdId, name: "Viagem" });
+
+      const transaction = await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 10,
+        date: "2026-07-15",
+        accountId: account.id,
+        tagIds: [tagA.id, tagB.id],
+      });
+
+      const transactions = await listTransactionsForMonth(anon, {
+        householdId,
+        year: 2026,
+        month: 7,
+      });
+
+      const found = transactions.find((t) => t.id === transaction.id);
+      expect(found?.tagIds.sort()).toEqual([tagA.id, tagB.id].sort());
+    } finally {
+      await cleanupTestData(admin, {
+        householdIds: [householdId],
+        userIds: [userA.id, userB.id],
+      });
+    }
+  });
+
+  it("filters by tagId, excluding transactions that don't carry that tag", async () => {
+    const admin = createAdminClient();
+    const userA = await createTestUser(admin, "member-a");
+    const userB = await createTestUser(admin, "member-b");
+    const householdId = await createTestHousehold(admin, "Test Household", [
+      { user: userA, displayName: "Alice" },
+      { user: userB, displayName: "Bob" },
+    ]);
+
+    try {
+      const anon = createAnonClient();
+      await signInAs(anon, userA);
+      const account = await createAccount(anon, { householdId, name: "Carteira" });
+      const tagA = await createTag(anon, { householdId, name: "Reembolsável" });
+      const tagB = await createTag(anon, { householdId, name: "Viagem" });
+
+      const tagged = await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 10,
+        date: "2026-07-05",
+        accountId: account.id,
+        tagIds: [tagA.id],
+      });
+      const untagged = await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 20,
+        date: "2026-07-06",
+        accountId: account.id,
+      });
+      const otherTagged = await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 30,
+        date: "2026-07-07",
+        accountId: account.id,
+        tagIds: [tagB.id],
+      });
+
+      const filtered = await listTransactionsForMonth(anon, {
+        householdId,
+        year: 2026,
+        month: 7,
+        tagId: tagA.id,
+      });
+
+      const filteredIds = filtered.map((t) => t.id);
+      expect(filteredIds).toContain(tagged.id);
+      expect(filteredIds).not.toContain(untagged.id);
+      expect(filteredIds).not.toContain(otherTagged.id);
+    } finally {
+      await cleanupTestData(admin, {
+        householdIds: [householdId],
+        userIds: [userA.id, userB.id],
       });
     }
   });

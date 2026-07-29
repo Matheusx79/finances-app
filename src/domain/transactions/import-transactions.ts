@@ -104,5 +104,5 @@ export async function importTransactions(
     .select(TRANSACTION_COLUMNS);
   if (error) throw error;
 
-  return { inserted: data.map(toTransaction), skipped };
+  return { inserted: data.map((row) => toTransaction(row)), skipped };
 }

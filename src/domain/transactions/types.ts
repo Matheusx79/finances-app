@@ -11,6 +11,7 @@ export type Transaction = {
   ownerHouseholdMemberId: string | null;
   note: string | null;
   createdAt: string;
+  tagIds: string[];
 };
 
 type TransactionRow = {
@@ -26,7 +27,7 @@ type TransactionRow = {
   created_at: string;
 };
 
-export function toTransaction(row: TransactionRow): Transaction {
+export function toTransaction(row: TransactionRow, tagIds: string[] = []): Transaction {
   return {
     id: row.id,
     householdId: row.household_id,
@@ -38,6 +39,7 @@ export function toTransaction(row: TransactionRow): Transaction {
     ownerHouseholdMemberId: row.owner_household_member_id,
     note: row.note,
     createdAt: row.created_at,
+    tagIds,
   };
 }
 

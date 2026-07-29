@@ -8,6 +8,7 @@ import {
 } from "../test-support/household-fixtures";
 import { createAccount } from "../accounts/create-account";
 import { createCategory } from "../categories/create-category";
+import { createTag } from "../tags/create-tag";
 import { createTransaction } from "./create-transaction";
 import { updateTransaction } from "./update-transaction";
 
@@ -94,6 +95,93 @@ describe("updateTransaction", () => {
 
       expect(updated.amount).toBe(150);
       expect(updated.date).toBe("2026-07-12");
+    } finally {
+      await cleanupTestData(admin, {
+        householdIds: [householdId],
+        userIds: [userA.id, userB.id],
+      });
+    }
+  });
+
+  it("replaces a transaction's tagIds (delete-then-insert)", async () => {
+    const admin = createAdminClient();
+    const userA = await createTestUser(admin, "member-a");
+    const userB = await createTestUser(admin, "member-b");
+    const householdId = await createTestHousehold(admin, "Test Household", [
+      { user: userA, displayName: "Alice" },
+      { user: userB, displayName: "Bob" },
+    ]);
+
+    try {
+      const anon = createAnonClient();
+      await signInAs(anon, userA);
+
+      const account = await createAccount(anon, { householdId, name: "Carteira" });
+      const tagA = await createTag(anon, { householdId, name: "Reembolsável" });
+      const tagB = await createTag(anon, { householdId, name: "Viagem" });
+      const tagC = await createTag(anon, { householdId, name: "Urgente" });
+
+      const transaction = await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 10,
+        date: "2026-07-15",
+        accountId: account.id,
+        tagIds: [tagA.id, tagB.id],
+      });
+
+      const updated = await updateTransaction(anon, {
+        transactionId: transaction.id,
+        type: "income",
+        amount: 10,
+        date: "2026-07-15",
+        accountId: account.id,
+        tagIds: [tagC.id],
+      });
+
+      expect(updated.tagIds).toEqual([tagC.id]);
+    } finally {
+      await cleanupTestData(admin, {
+        householdIds: [householdId],
+        userIds: [userA.id, userB.id],
+      });
+    }
+  });
+
+  it("leaves tagIds untouched when tagIds is omitted", async () => {
+    const admin = createAdminClient();
+    const userA = await createTestUser(admin, "member-a");
+    const userB = await createTestUser(admin, "member-b");
+    const householdId = await createTestHousehold(admin, "Test Household", [
+      { user: userA, displayName: "Alice" },
+      { user: userB, displayName: "Bob" },
+    ]);
+
+    try {
+      const anon = createAnonClient();
+      await signInAs(anon, userA);
+
+      const account = await createAccount(anon, { householdId, name: "Carteira" });
+      const tag = await createTag(anon, { householdId, name: "Reembolsável" });
+
+      const transaction = await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 10,
+        date: "2026-07-15",
+        accountId: account.id,
+        tagIds: [tag.id],
+      });
+
+      const updated = await updateTransaction(anon, {
+        transactionId: transaction.id,
+        type: "income",
+        amount: 20,
+        date: "2026-07-15",
+        accountId: account.id,
+      });
+
+      expect(updated.tagIds).toEqual([tag.id]);
     } finally {
       await cleanupTestData(admin, {
         householdIds: [householdId],

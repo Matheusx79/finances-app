@@ -8,6 +8,7 @@ import {
 } from "../test-support/household-fixtures";
 import { createAccount } from "../accounts/create-account";
 import { createCategory } from "../categories/create-category";
+import { createTag } from "../tags/create-tag";
 import { createTransaction } from "./create-transaction";
 
 describe("createTransaction", () => {
@@ -121,6 +122,41 @@ describe("createTransaction", () => {
           accountId: account.id,
         }),
       ).rejects.toThrow();
+    } finally {
+      await cleanupTestData(admin, {
+        householdIds: [householdId],
+        userIds: [userA.id, userB.id],
+      });
+    }
+  });
+
+  it("creates a transaction with multiple tagIds", async () => {
+    const admin = createAdminClient();
+    const userA = await createTestUser(admin, "member-a");
+    const userB = await createTestUser(admin, "member-b");
+    const householdId = await createTestHousehold(admin, "Test Household", [
+      { user: userA, displayName: "Alice" },
+      { user: userB, displayName: "Bob" },
+    ]);
+
+    try {
+      const anon = createAnonClient();
+      await signInAs(anon, userA);
+
+      const account = await createAccount(anon, { householdId, name: "Carteira" });
+      const tagA = await createTag(anon, { householdId, name: "Reembolsável" });
+      const tagB = await createTag(anon, { householdId, name: "Viagem" });
+
+      const transaction = await createTransaction(anon, {
+        householdId,
+        type: "income",
+        amount: 10,
+        date: "2026-07-15",
+        accountId: account.id,
+        tagIds: [tagA.id, tagB.id],
+      });
+
+      expect(transaction.tagIds.sort()).toEqual([tagA.id, tagB.id].sort());
     } finally {
       await cleanupTestData(admin, {
         householdIds: [householdId],
