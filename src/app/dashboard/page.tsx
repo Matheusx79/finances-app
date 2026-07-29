@@ -12,6 +12,7 @@ import type { BudgetProgressForMonth } from "@/domain/budgets/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionSummary } from "@/components/transaction-summary";
 import { CategoryBudgetCard } from "@/components/category-budget-progress";
+import { CategorySpendingChart } from "@/components/category-spending-chart";
 import { formatBRL } from "@/lib/currency";
 import { MonthNav, formatMonthYearBR, resolveMonthParams } from "./month-nav";
 
@@ -96,6 +97,17 @@ export default async function DashboardPage({
                     ))}
                   </ul>
                 )}
+              </CardContent>
+            </Card>
+          )}
+
+          {household && budgetProgress && (
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>Gastos por categoria — {formatMonthYearBR(year, month)}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CategorySpendingChart categories={budgetProgress.categories} />
               </CardContent>
             </Card>
           )}
