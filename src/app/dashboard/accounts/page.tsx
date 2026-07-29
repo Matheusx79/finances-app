@@ -1,5 +1,7 @@
 import { requireHousehold } from "@/lib/current-household";
 import { listAccounts } from "@/domain/accounts/list-accounts";
+import { getAccountBalances } from "@/domain/accounts/get-account-balances";
+import { formatBRL } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +10,10 @@ import { createAccountAction, deleteAccountAction, renameAccountAction } from ".
 
 export default async function AccountsPage() {
   const { supabase, householdId } = await requireHousehold();
-  const accounts = await listAccounts(supabase, { householdId });
+  const [accounts, balances] = await Promise.all([
+    listAccounts(supabase, { householdId }),
+    getAccountBalances(supabase, { householdId }),
+  ]);
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4 lg:max-w-5xl">
@@ -45,6 +50,9 @@ export default async function AccountsPage() {
                   key={account.id}
                   className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between"
                 >
+                  <span className="text-sm font-medium whitespace-nowrap">
+                    {formatBRL(balances.get(account.id) ?? 0)}
+                  </span>
                   <form action={renameAccountAction} className="flex flex-1 gap-2">
                     <input type="hidden" name="accountId" value={account.id} />
                     <Input
