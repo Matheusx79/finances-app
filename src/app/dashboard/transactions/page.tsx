@@ -68,10 +68,10 @@ export default async function TransactionsPage({
 
   return (
     <div className="flex w-full max-w-lg flex-col gap-4 lg:max-w-5xl">
-      <h1 className="text-xl font-semibold">Transações</h1>
+      <h1 className="font-heading text-xl font-semibold">Transações</h1>
 
       {erro && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {ERROR_MESSAGES[erro] ?? "Não foi possível salvar a transação."}
         </p>
       )}
@@ -127,7 +127,7 @@ export default async function TransactionsPage({
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               Nenhuma transação registrada neste mês ainda.
             </p>
           ) : (
@@ -135,7 +135,7 @@ export default async function TransactionsPage({
               {transactions.map((transaction) => (
                 <li
                   key={transaction.id}
-                  className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
+                  className="flex flex-col gap-2 rounded-lg border border-border p-3"
                 >
                   <TransactionSummary
                     transaction={transaction}
@@ -146,7 +146,7 @@ export default async function TransactionsPage({
                   />
 
                   <details>
-                    <summary className="cursor-pointer text-sm text-zinc-600 underline dark:text-zinc-400">
+                    <summary className="cursor-pointer text-sm text-muted-foreground underline">
                       Editar
                     </summary>
                     <div className="mt-2">

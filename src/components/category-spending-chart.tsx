@@ -18,7 +18,7 @@ export function CategorySpendingChart({ categories }: { categories: CategoryBudg
 
   if (data.length === 0) {
     return (
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">Sem gastos neste mês.</p>
+      <p className="text-sm text-muted-foreground">Sem gastos neste mês.</p>
     );
   }
 

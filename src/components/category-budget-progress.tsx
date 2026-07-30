@@ -27,7 +27,7 @@ export function CategoryBudgetProgress({
         <span
           className={cn(
             "text-sm font-medium",
-            overBudget ? "text-red-600 dark:text-red-400" : "text-zinc-600 dark:text-zinc-400",
+            overBudget ? "text-destructive" : "text-muted-foreground",
           )}
         >
           {formatBRL(spentAmount)}
@@ -38,12 +38,12 @@ export function CategoryBudgetProgress({
         <>
           <Progress
             value={percent}
-            indicatorClassName={overBudget ? "bg-red-600 dark:bg-red-500" : undefined}
+            indicatorClassName={overBudget ? "bg-destructive" : undefined}
           />
           <span
             className={cn(
               "text-xs font-medium",
-              overBudget ? "text-red-600 dark:text-red-400" : "text-zinc-500 dark:text-zinc-400",
+              overBudget ? "text-destructive" : "text-muted-foreground",
             )}
           >
             Restante: {formatBRL(budgetAmount - spentAmount)}
@@ -75,9 +75,7 @@ export function CategoryBudgetCard({
     <div
       className={cn(
         "flex flex-col gap-3 rounded-lg border p-3",
-        overBudget
-          ? "border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950/40"
-          : "border-zinc-200 dark:border-zinc-800",
+        overBudget ? "border-destructive/40 bg-destructive/10" : "border-border",
         className,
       )}
     >

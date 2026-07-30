@@ -58,8 +58,8 @@ export default async function DashboardPage({
   return (
     <div className="flex w-full max-w-lg flex-col items-center gap-4 lg:max-w-6xl lg:items-stretch">
       <div className="flex flex-col items-center gap-2 text-center lg:items-start lg:text-left">
-        <h1 className="text-2xl font-semibold">Bem-vindo, {displayName}!</h1>
-        {household && <p className="text-zinc-600 dark:text-zinc-400">{household.name}</p>}
+        <h1 className="font-heading text-2xl font-semibold">Bem-vindo, {displayName}!</h1>
+        {household && <p className="text-muted-foreground">{household.name}</p>}
       </div>
 
       {household && <MonthNav year={year} month={month} basePath="/dashboard" />}
@@ -72,7 +72,7 @@ export default async function DashboardPage({
                 <CardTitle>Receita de {formatMonthYearBR(year, month)}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
+                <p className="text-3xl font-semibold text-green-600 dark:text-green-400">
                   {formatBRL(budgetProgress.totalIncome)}
                 </p>
               </CardContent>
@@ -86,7 +86,7 @@ export default async function DashboardPage({
               </CardHeader>
               <CardContent>
                 {budgetProgress.categories.length === 0 ? (
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <p className="text-sm text-muted-foreground">
                     Nenhuma categoria cadastrada ainda.
                   </p>
                 ) : (
@@ -136,16 +136,13 @@ export default async function DashboardPage({
             </CardHeader>
             <CardContent>
               {transactions.length === 0 ? (
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="text-sm text-muted-foreground">
                   Nenhuma transação registrada neste mês ainda.
                 </p>
               ) : (
                 <ul className="flex flex-col gap-3">
                   {transactions.map((transaction) => (
-                    <li
-                      key={transaction.id}
-                      className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
-                    >
+                    <li key={transaction.id} className="rounded-lg border border-border p-3">
                       <TransactionSummary
                         transaction={transaction}
                         accounts={accounts}

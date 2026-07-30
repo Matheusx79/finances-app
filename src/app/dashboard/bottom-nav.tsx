@@ -11,7 +11,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-zinc-200 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden dark:border-zinc-800 dark:bg-zinc-950"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="mx-auto flex max-w-lg">
         {NAV_DESTINATIONS.map(({ href, label, icon: Icon, exact }) => {
@@ -26,7 +26,7 @@ export function BottomNav() {
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium",
-                  isActive ? "text-primary" : "text-zinc-500 dark:text-zinc-400",
+                  isActive ? "text-primary" : "text-muted-foreground",
                 )}
               >
                 <Icon className="size-5" />

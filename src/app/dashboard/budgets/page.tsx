@@ -17,7 +17,7 @@ export default async function BudgetsPage() {
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4 lg:max-w-5xl">
-      <h1 className="text-xl font-semibold">Orçamentos</h1>
+      <h1 className="font-heading text-xl font-semibold">Orçamentos</h1>
 
       <Card>
         <CardHeader>
@@ -25,7 +25,7 @@ export default async function BudgetsPage() {
         </CardHeader>
         <CardContent>
           {progress.categories.length === 0 ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               Nenhuma categoria cadastrada ainda.
             </p>
           ) : (
