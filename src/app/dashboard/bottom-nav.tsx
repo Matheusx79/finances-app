@@ -20,17 +20,17 @@ export function BottomNav() {
             : pathname === href || (pathname?.startsWith(`${href}/`) ?? false);
 
           return (
-            <li key={href} className="flex-1">
+            <li key={href} className="min-w-0 flex-1">
               <Link
                 href={href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium",
+                  "flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium",
                   isActive ? "text-primary" : "text-muted-foreground",
                 )}
               >
                 <Icon className="size-5" />
-                {label}
+                <span className="text-center leading-tight break-words">{label}</span>
               </Link>
             </li>
           );
