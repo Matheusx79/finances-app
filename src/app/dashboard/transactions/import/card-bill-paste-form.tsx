@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Account } from "@/domain/accounts/types";
+import type { Category } from "@/domain/categories/types";
 import type { HouseholdMember } from "@/domain/household/types";
-import { CARD_BILL_PROMPT_TEMPLATE } from "@/domain/card-bill/prompt-template";
+import { buildCardBillPrompt } from "@/domain/card-bill/prompt-template";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
@@ -20,15 +21,21 @@ export function CardBillPasteForm({
   action,
   accounts,
   members,
+  categories,
 }: {
   action: (formData: FormData) => Promise<void>;
   accounts: Account[];
   members: HouseholdMember[];
+  categories: Category[];
 }) {
   const [copied, setCopied] = useState(false);
+  const prompt = useMemo(
+    () => buildCardBillPrompt(categories.map((c) => c.name)),
+    [categories],
+  );
 
   async function copyPrompt() {
-    await navigator.clipboard.writeText(CARD_BILL_PROMPT_TEMPLATE);
+    await navigator.clipboard.writeText(prompt);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -40,7 +47,7 @@ export function CardBillPasteForm({
         <textarea
           id="prompt-template"
           readOnly
-          value={CARD_BILL_PROMPT_TEMPLATE}
+          value={prompt}
           rows={6}
           className="w-full rounded-lg border border-input bg-muted px-2.5 py-2 text-xs text-zinc-600 dark:text-zinc-400"
         />

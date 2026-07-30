@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireHousehold } from "@/lib/current-household";
 import { listAccounts } from "@/domain/accounts/list-accounts";
+import { listCategories } from "@/domain/categories/list-categories";
 import { parseOfxStatement } from "@/domain/ofx/parse-ofx-statement";
 import { parseCardBillPaste } from "@/domain/card-bill/parse-card-bill-paste";
 import {
@@ -101,9 +102,11 @@ export async function pasteCardBillAction(formData: FormData) {
     redirect(importUrl({ tab: "fatura", erro: "conta-ou-responsavel-invalido" }));
   }
 
+  const categories = await listCategories(supabase, { householdId });
+
   let parsedRows;
   try {
-    parsedRows = parseCardBillPaste(pasteText);
+    parsedRows = parseCardBillPaste(pasteText, categories);
   } catch {
     redirect(importUrl({ tab: "fatura", erro: "fatura-invalida" }));
   }
@@ -118,6 +121,7 @@ export async function pasteCardBillAction(formData: FormData) {
     description: row.description,
     fitid: row.externalId,
     duplicate: existingExternalIds.has(row.externalId),
+    suggestedCategoryId: row.suggestedCategoryId,
   }));
 
   redirect(

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { TransactionType } from "@/domain/transactions/types";
+import type { Category } from "@/domain/categories/types";
 
 export type ParsedCardBillRow = {
   date: string;
@@ -7,6 +8,7 @@ export type ParsedCardBillRow = {
   type: TransactionType;
   description: string;
   externalId: string;
+  suggestedCategoryId: string | null;
 };
 
 type CardBillPasteRow = {
@@ -14,6 +16,7 @@ type CardBillPasteRow = {
   descricao?: unknown;
   valor?: unknown;
   parcela?: unknown;
+  categoria?: unknown;
 };
 
 const CODE_FENCE_RE = /^```(?:json)?\s*([\s\S]*?)\s*```$/;
@@ -35,7 +38,7 @@ function externalIdFor(date: string, description: string, amount: number): strin
  * malformed line in an otherwise-good bill shouldn't block the rest —
  * matching `parseOfxStatement`'s tolerance for individual bad rows.
  */
-export function parseCardBillPaste(jsonText: string): ParsedCardBillRow[] {
+export function parseCardBillPaste(jsonText: string, categories: Category[]): ParsedCardBillRow[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(stripCodeFence(jsonText));
@@ -45,6 +48,8 @@ export function parseCardBillPaste(jsonText: string): ParsedCardBillRow[] {
   if (!Array.isArray(parsed)) {
     throw new Error("Não foi possível interpretar o texto colado. Verifique se é um JSON válido.");
   }
+
+  const categoryIdByName = new Map(categories.map((c) => [c.name.trim().toLowerCase(), c.id]));
 
   const rows: ParsedCardBillRow[] = [];
 
@@ -57,6 +62,10 @@ export function parseCardBillPaste(jsonText: string): ParsedCardBillRow[] {
     const baseDescription = typeof raw.descricao === "string" ? raw.descricao.trim() : "";
     const description = parcela ? `${baseDescription} (${parcela})` : baseDescription;
     const amount = Number(Math.abs(signedAmount).toFixed(2));
+    const suggestedCategoryId =
+      typeof raw.categoria === "string"
+        ? (categoryIdByName.get(raw.categoria.trim().toLowerCase()) ?? null)
+        : null;
 
     rows.push({
       date,
@@ -64,6 +73,7 @@ export function parseCardBillPaste(jsonText: string): ParsedCardBillRow[] {
       type: signedAmount < 0 ? "income" : "expense",
       description,
       externalId: externalIdFor(date, description, amount),
+      suggestedCategoryId,
     });
   }
 

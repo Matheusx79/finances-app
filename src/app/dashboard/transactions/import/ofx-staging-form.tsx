@@ -89,7 +89,7 @@ export function OfxStagingForm({
               <div className="flex items-center gap-3">
                 <select
                   name={`categoryId-${i}`}
-                  defaultValue=""
+                  defaultValue={row.suggestedCategoryId ?? ""}
                   aria-label="Categoria"
                   className={SELECT_CLASSNAME}
                 >

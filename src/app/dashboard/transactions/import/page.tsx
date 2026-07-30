@@ -128,6 +128,7 @@ export default async function ImportOfxPage({
               action={pasteCardBillAction}
               accounts={accounts}
               members={household.members}
+              categories={categories}
             />
           </CardContent>
         </Card>

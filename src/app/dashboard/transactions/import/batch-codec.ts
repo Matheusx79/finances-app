@@ -7,6 +7,7 @@ export type OfxBatchRow = {
   description: string;
   fitid: string | null;
   duplicate: boolean;
+  suggestedCategoryId?: string | null;
 };
 
 /**
