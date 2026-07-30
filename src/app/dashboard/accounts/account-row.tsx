@@ -40,7 +40,7 @@ export function AccountRow({
 
   return (
     <li className="flex flex-col gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
-      <form action={renameAccountAction} className="flex flex-1 gap-2 min-w-0">
+      <form action={renameAccountAction} className="flex flex-1 items-center gap-2 min-w-0">
         <input type="hidden" name="accountId" value={account.id} />
         <Input
           name="name"
@@ -50,6 +50,7 @@ export function AccountRow({
           autoFocus
           className="min-w-0"
         />
+        <span className="shrink-0 text-sm font-medium whitespace-nowrap">{formatBRL(balance)}</span>
         <Button type="submit" variant="outline" size="sm">
           Salvar
         </Button>

@@ -35,7 +35,7 @@ export default async function GoalsPage({
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4 lg:max-w-5xl">
-      <h1 className="font-heading text-xl font-semibold">Metas</h1>
+      <h1 className="font-heading text-2xl font-medium">Metas</h1>
 
       {errorMessage && (
         <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">

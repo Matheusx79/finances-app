@@ -17,7 +17,7 @@ export default async function BudgetsPage() {
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4 lg:max-w-5xl">
-      <h1 className="font-heading text-xl font-semibold">Orçamentos</h1>
+      <h1 className="font-heading text-2xl font-medium">Orçamentos</h1>
 
       <Card>
         <CardHeader>

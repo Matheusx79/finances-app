@@ -68,7 +68,7 @@ export default async function TransactionsPage({
 
   return (
     <div className="flex w-full max-w-lg flex-col gap-4 lg:max-w-5xl">
-      <h1 className="font-heading text-xl font-semibold">Transações</h1>
+      <h1 className="font-heading text-2xl font-medium">Transações</h1>
 
       {erro && (
         <p className="text-sm text-destructive" role="alert">

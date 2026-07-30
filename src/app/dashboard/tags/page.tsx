@@ -12,7 +12,7 @@ export default async function TagsPage() {
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-4 lg:max-w-5xl">
-      <h1 className="text-xl font-semibold">Etiquetas</h1>
+      <h1 className="font-heading text-2xl font-medium">Etiquetas</h1>
 
       <Card className="lg:max-w-sm">
         <CardHeader>
