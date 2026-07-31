@@ -36,7 +36,7 @@ export default async function TagsPage() {
         </CardHeader>
         <CardContent>
           {tags.length === 0 ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               Nenhuma etiqueta cadastrada ainda.
             </p>
           ) : (
