@@ -8,7 +8,14 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["src/domain/**/*.test.ts", "src/app/**/*.test.ts", "src/lib/**/*.test.ts"],
+    include: [
+      "src/domain/**/*.test.ts",
+      "src/app/**/*.test.{ts,tsx}",
+      "src/lib/**/*.test.ts",
+      "src/components/**/*.test.tsx",
+    ],
+    // Default environment is node (domain tests). Component tests (*.test.tsx)
+    // opt into a DOM via a `// @vitest-environment jsdom` pragma at the top of the file.
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
     // Domain tests hit a real local Postgres via the Supabase CLI stack —
