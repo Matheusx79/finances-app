@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createTagAction, deleteTagAction, renameTagAction } from "./actions";
+import { createTagAction } from "./actions";
+import { TagRow } from "./tag-row";
 
 export default async function TagsPage() {
   const { supabase, householdId } = await requireHousehold();
@@ -39,31 +40,9 @@ export default async function TagsPage() {
               Nenhuma etiqueta cadastrada ainda.
             </p>
           ) : (
-            <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+            <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 xl:grid-cols-3">
               {tags.map((tag) => (
-                <li
-                  key={tag.id}
-                  className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <form action={renameTagAction} className="flex flex-1 gap-2">
-                    <input type="hidden" name="tagId" value={tag.id} />
-                    <Input
-                      name="name"
-                      defaultValue={tag.name}
-                      aria-label={`Nome da etiqueta ${tag.name}`}
-                      required
-                    />
-                    <Button type="submit" variant="outline" size="sm">
-                      Salvar
-                    </Button>
-                  </form>
-                  <form action={deleteTagAction}>
-                    <input type="hidden" name="tagId" value={tag.id} />
-                    <Button type="submit" variant="destructive" size="sm">
-                      Excluir
-                    </Button>
-                  </form>
-                </li>
+                <TagRow key={tag.id} tag={tag} />
               ))}
             </ul>
           )}
