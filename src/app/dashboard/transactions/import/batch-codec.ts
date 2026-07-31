@@ -1,4 +1,5 @@
 import type { OfxTransactionType } from "@/domain/ofx/parse-ofx-statement";
+import type { DuplicateKind } from "@/domain/transactions/find-likely-duplicate-manual-transactions";
 
 export type OfxBatchRow = {
   date: string;
@@ -6,7 +7,7 @@ export type OfxBatchRow = {
   type: OfxTransactionType;
   description: string;
   fitid: string | null;
-  duplicate: boolean;
+  duplicateKind: DuplicateKind;
   suggestedCategoryId?: string | null;
 };
 

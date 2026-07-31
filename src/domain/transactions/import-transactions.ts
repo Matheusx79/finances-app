@@ -5,6 +5,7 @@ import {
   type Transaction,
   type TransactionType,
 } from "@/domain/transactions/types";
+import type { ManualTransactionCandidate } from "@/domain/transactions/find-likely-duplicate-manual-transactions";
 
 export type ImportOfxRow = {
   date: string;
@@ -43,6 +44,41 @@ export async function findExistingExternalIds(
     if (row.external_id) existingFitids.add(row.external_id as string);
   }
   return existingFitids;
+}
+
+/**
+ * Manual (no `external_id`) expense transactions on `accountId` dated
+ * within [minDate, maxDate] — the candidate pool
+ * `findLikelyDuplicateManualTransactions` (ADR-0005) matches import rows
+ * against, to flag a quick-added transaction that's about to arrive a
+ * second time via import. Only manual rows are candidates: anything with an
+ * `external_id` was already imported once, and is already covered by
+ * `findExistingExternalIds`'s exact check. Scoped to `type = "expense"`
+ * (per ADR-0005's "manual expense transaction" — quick-add is for card
+ * charges, not refunds) rather than left for the fuzzy matcher's
+ * same-type check to filter out, since an income candidate could otherwise
+ * only ever match an income import row by coincidence, never by design.
+ */
+export async function findManualDuplicateCandidates(
+  supabase: SupabaseClient,
+  { accountId, minDate, maxDate }: { accountId: string; minDate: string; maxDate: string },
+): Promise<ManualTransactionCandidate[]> {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("id, date, amount, type")
+    .eq("account_id", accountId)
+    .eq("type", "expense" satisfies TransactionType)
+    .is("external_id", null)
+    .gte("date", minDate)
+    .lte("date", maxDate);
+  if (error) throw error;
+
+  return data.map((row) => ({
+    id: row.id as string,
+    date: row.date as string,
+    amount: Number(row.amount),
+    type: row.type as TransactionType,
+  }));
 }
 
 /**

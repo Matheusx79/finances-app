@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireHousehold } from "@/lib/current-household";
 import { listAccounts } from "@/domain/accounts/list-accounts";
 import { listCategories } from "@/domain/categories/list-categories";
@@ -9,9 +10,16 @@ import { parseOfxStatement } from "@/domain/ofx/parse-ofx-statement";
 import { parseCardBillPaste } from "@/domain/card-bill/parse-card-bill-paste";
 import {
   findExistingExternalIds,
+  findManualDuplicateCandidates,
   importTransactions,
   type ImportOfxRow,
 } from "@/domain/transactions/import-transactions";
+import {
+  classifyDuplicateKinds,
+  dateWindowForBatch,
+  type DuplicateKind,
+  type ImportRowForDuplicateMatching,
+} from "@/domain/transactions/find-likely-duplicate-manual-transactions";
 import type { Account } from "@/domain/accounts/types";
 import type { HouseholdMember } from "@/domain/household/types";
 import type { TransactionType } from "@/domain/transactions/types";
@@ -40,6 +48,33 @@ function accountAndOwnerAreValid({
   members: HouseholdMember[];
 }): boolean {
   return accounts.some((account) => account.id === accountId) && members.some((member) => member.id === ownerId);
+}
+
+/**
+ * Fetches the fuzzy-match candidate pool (ADR-0005) and delegates the actual
+ * per-row classification to `classifyDuplicateKinds` — kept this thin so the
+ * only thing living here is the DB round-trip; the classification logic
+ * itself is a pure, directly-tested domain function.
+ */
+async function computeDuplicateKinds(
+  supabase: SupabaseClient,
+  {
+    accountId,
+    rows,
+    isExactDuplicate,
+  }: {
+    accountId: string;
+    rows: ImportRowForDuplicateMatching[];
+    isExactDuplicate: boolean[];
+  },
+): Promise<DuplicateKind[]> {
+  const fuzzyCandidateDates = rows.filter((_, i) => !isExactDuplicate[i]).map((row) => row.date);
+  const window = dateWindowForBatch(fuzzyCandidateDates);
+  const manualCandidates = window
+    ? await findManualDuplicateCandidates(supabase, { accountId, ...window })
+    : [];
+
+  return classifyDuplicateKinds(rows, isExactDuplicate, manualCandidates);
 }
 
 export async function uploadOfxAction(formData: FormData) {
@@ -71,10 +106,16 @@ export async function uploadOfxAction(formData: FormData) {
     .map((row) => row.fitid)
     .filter((fitid): fitid is string => fitid !== null);
   const existingFitids = await findExistingExternalIds(supabase, { accountId, fitids });
+  const isExactDuplicate = parsedRows.map((row) => Boolean(row.fitid && existingFitids.has(row.fitid)));
+  const duplicateKinds = await computeDuplicateKinds(supabase, {
+    accountId,
+    rows: parsedRows,
+    isExactDuplicate,
+  });
 
-  const batchRows: OfxBatchRow[] = parsedRows.map((row) => ({
+  const batchRows: OfxBatchRow[] = parsedRows.map((row, i) => ({
     ...row,
-    duplicate: Boolean(row.fitid && existingFitids.has(row.fitid)),
+    duplicateKind: duplicateKinds[i],
   }));
 
   redirect(
@@ -113,14 +154,20 @@ export async function pasteCardBillAction(formData: FormData) {
 
   const externalIds = parsedRows.map((row) => row.externalId);
   const existingExternalIds = await findExistingExternalIds(supabase, { accountId, fitids: externalIds });
+  const isExactDuplicate = parsedRows.map((row) => existingExternalIds.has(row.externalId));
+  const duplicateKinds = await computeDuplicateKinds(supabase, {
+    accountId,
+    rows: parsedRows,
+    isExactDuplicate,
+  });
 
-  const batchRows: OfxBatchRow[] = parsedRows.map((row) => ({
+  const batchRows: OfxBatchRow[] = parsedRows.map((row, i) => ({
     date: row.date,
     amount: row.amount,
     type: row.type,
     description: row.description,
     fitid: row.externalId,
-    duplicate: existingExternalIds.has(row.externalId),
+    duplicateKind: duplicateKinds[i],
     suggestedCategoryId: row.suggestedCategoryId,
   }));
 

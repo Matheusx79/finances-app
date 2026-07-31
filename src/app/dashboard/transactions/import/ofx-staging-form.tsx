@@ -11,11 +11,14 @@ const SELECT_CLASSNAME =
  * Server-rendered staging list — every field the confirm action needs
  * (date/amount/type/description/fitid) round-trips as a hidden input per
  * row rather than being held in client state; only `categoryId` and
- * `include` are live user input. A duplicate-flagged row (`row.duplicate`,
- * from the upload action's `external_id` check) starts unchecked with a
- * "já importado" label, but the checkbox stays interactive — the user can
- * still re-include it, which is why `importTransactions` re-checks
- * duplicates itself rather than trusting this flag.
+ * `include` are live user input. A duplicate-flagged row (`row.duplicateKind`,
+ * from the upload action's `external_id` check plus the ADR-0005 fuzzy match
+ * against manual entries) starts unchecked with a "já importado" (exact) or
+ * "possível duplicata" (fuzzy) label, but the checkbox stays interactive —
+ * the user can still re-include it, which is why `importTransactions`
+ * re-checks the exact duplicate case itself rather than trusting this flag
+ * (the fuzzy case has no server-side re-check by design — it's advisory
+ * only, never a block on import).
  */
 export function OfxStagingForm({
   action,
@@ -77,9 +80,9 @@ export function OfxStagingForm({
                     {row.type === "expense" ? "-" : "+"}
                     {formatBRL(row.amount)}
                   </span>
-                  {row.duplicate && (
+                  {row.duplicateKind && (
                     <span className="text-xs text-amber-600 dark:text-amber-500">
-                      já importado
+                      {row.duplicateKind === "exact" ? "já importado" : "possível duplicata"}
                     </span>
                   )}
                 </span>
@@ -106,7 +109,7 @@ export function OfxStagingForm({
                     id={`include-${i}`}
                     type="checkbox"
                     name={`include-${i}`}
-                    defaultChecked={!row.duplicate}
+                    defaultChecked={!row.duplicateKind}
                   />
                   Incluir
                 </Label>
